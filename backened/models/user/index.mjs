@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { emailPattern } from "../../utils/core.mjs";
 
 const userSchema = new mongoose.Schema({
     firstname: {
@@ -16,6 +17,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         unique: true,
+        match: emailPattern,
     },
     password: {
         type: String,
@@ -24,7 +26,6 @@ const userSchema = new mongoose.Schema({
     },
     profilepicture: {
         type: String,
-        required: true,
         trim: true,
         default: null,
     }
