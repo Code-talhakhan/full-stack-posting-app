@@ -8,7 +8,7 @@ const API_URL = "http://localhost:3001/api/v1/post"
 
 const App = () => {
   const [posts, set_posts] = useState([])
-
+ 
   useEffect(() => {
     getAllPosts()
   }, [])
