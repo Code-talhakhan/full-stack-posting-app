@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { Eye, EyeOff } from "lucide-react"
-import { motion } from "framer-motion" // Framer motion import kiya
+import { motion } from "framer-motion"
+import { toast } from "sonner"
 import signupPic from "../assets/signup-image.png"
 
 const baseUrl = "http://localhost:3001"
@@ -67,17 +68,17 @@ const Signup = () => {
     e.preventDefault()
 
     if (!firstname.trim() || !lastname.trim() || !email.trim() || !password || !rep_password) {
-      alert("Please fill in all fields")
+      toast.error("Please fill in all fields")
       return
     }
 
     if (password !== rep_password) {
-      alert("Passwords do not match!")
+      toast.error("Passwords do not match!")
       return
     }
 
     if (password.length < 8) {
-      alert("Password must be at least 8 characters long")
+      toast.error("Password must be at least 8 characters long")
       return
     }
 
@@ -89,18 +90,26 @@ const Signup = () => {
         email: email,
         password: password,
       })
-      alert(resp?.data?.message || "Signup Successful!")
+      
+      // Theme matching blue success toast
+      toast(resp?.data?.message || "Signup Successful!", {
+        style: {
+          background: '#4361EE',
+          color: '#ffffff',
+          border: 'none',
+        },
+      })
+      
       navigate("/login")
     } catch (error) {
       console.error(error)
-      alert(error?.response?.data?.message || "Something went wrong. Please try again.")
+      toast.error(error?.response?.data?.message || "Something went wrong. Please try again.")
     } finally {
       set_loading(false)
     }
   }
 
   return (
-    // motion.div use kiya hai slide effect ke liye
     <motion.div 
       initial={{ opacity: 0, x: -50 }} 
       animate={{ opacity: 1, x: 0 }} 
@@ -178,7 +187,7 @@ const Signup = () => {
             />
 
             <div className="pt-2">
-              <Button disabled={loading}>
+              <Button type="submit" disabled={loading}>
                 {loading ? "Signing up..." : "Sign up"}
               </Button>
             </div>

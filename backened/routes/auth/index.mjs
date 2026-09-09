@@ -86,7 +86,7 @@ router.post("/login", async (req, res) => {
                 _id: userAccount._id
             },
             process.env.JWT_KEY || "secret_key_fallback",
-            { expiresIn: '15d' }
+            { expiresIn: '20d' }
         )
 
         // FIX 3: Return token AND user object matching frontend expectation

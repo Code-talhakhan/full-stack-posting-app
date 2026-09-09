@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
 import { Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
+import { toast } from "sonner"
 import loginPic from "../assets/signup-image.png"
 
 const baseUrl = "http://localhost:3001"
@@ -62,12 +63,11 @@ const Login = () => {
 
   const navigate = useNavigate()
 
-  // FUNCTIONALITY EXACTLY SAME
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!email.trim() || !password) {
-      alert("Please enter both email and password")
+      toast.error("Please enter both email and password")
       return
     }
 
@@ -79,7 +79,14 @@ const Login = () => {
         password: password,
       })
 
-      alert("Login Done")
+      // Theme matching blue success toast
+      toast("Login Successful!", {
+        style: {
+          background: '#4361EE',
+          color: '#ffffff',
+          border: 'none',
+        },
+      })
 
       // Token Save
       if (resp?.data?.data?.token) {
@@ -90,14 +97,13 @@ const Login = () => {
 
     } catch (error) {
       console.error(error)
-      alert(error?.response?.data?.message || "Login failed!")
+      toast.error(error?.response?.data?.message || "Invalid credentials!")
     } finally {
       set_loading(false)
     }
   }
 
   return (
-    // Framer motion wrap kiya hai taake slide animation chale
     <motion.div 
       initial={{ opacity: 0, x: 50 }} 
       animate={{ opacity: 1, x: 0 }} 
