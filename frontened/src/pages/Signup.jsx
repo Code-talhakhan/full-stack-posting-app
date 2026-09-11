@@ -91,7 +91,6 @@ const Signup = () => {
         password: password,
       })
       
-      // Theme matching maroon/magenta success toast with Check icon
       toast(resp?.data?.message || "Signup Successful!", {
         icon: <CheckCircle2 size={20} className="text-white" />,
         style: {
@@ -119,7 +118,7 @@ const Signup = () => {
       className="min-h-screen w-full relative flex items-center justify-center p-4 sm:p-6 overflow-hidden font-sans bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]"
     >
       
-      {/* Background abstract overlay effects */}
+     
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 

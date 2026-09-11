@@ -79,7 +79,7 @@ const Login = () => {
         password: password,
       })
 
-      // Theme matching maroon/magenta success toast with check icon
+      
       toast("Login Successful!", {
         icon: <CheckCircle2 size={20} className="text-white" />,
         style: {
@@ -113,14 +113,14 @@ const Login = () => {
       className="min-h-screen w-full relative flex items-center justify-center p-4 sm:p-6 overflow-hidden font-sans bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]"
     >
       
-      {/* Background abstract overlay effects */}
+      
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 
-      {/* Main Container Card */}
+      
       <div className="relative z-10 w-full max-w-4xl bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-[90vh] overflow-hidden">
         
-        {/* Left Side - Form Area */}
+        
         <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-white">
           
           <div className="text-center mb-6">
@@ -164,10 +164,10 @@ const Login = () => {
 
         </div>
 
-        {/* Right Side - Illustration Area */}
+        
         <div className="hidden md:flex w-1/2 bg-[#fdfafb] p-8 flex-col items-center justify-center border-l border-gray-100">
           
-          {/* Apply container sizing and scale effects for illustration */}
+          
           <div className="w-full max-w-[450px] mb-6 flex items-center justify-center">
             <img 
               src={loginPic} 
