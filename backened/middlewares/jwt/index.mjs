@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken"
+import { UserModel } from "../../models/index.mjs"
 
 export const authGuardJWT = async (req, res, next) => {
  console.log("middleware is running...");
@@ -17,9 +18,12 @@ export const authGuardJWT = async (req, res, next) => {
 
  try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY)
- console.log(decodedToken)
+    const currentUser = await UserModel.findOne({_id: decodedToken._id})
+    // console.log("currentuser=>", currentUser)
 
- next()
+    req.currentUser = currentUser
+    next()
+ 
  } catch (error) {
       console.error(error)
         return res.status(401).send({

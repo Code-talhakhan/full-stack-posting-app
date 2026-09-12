@@ -23,6 +23,9 @@ app.get("/", (req,res) =>{
 app.use("/api/v1", authRoutes)
 app.use("/api/v1", authGuardJWT)
 app.use("/api/v1", postRoutes)
+app.use("/api/v1", profileRoutes)
+
+
 
 
 
