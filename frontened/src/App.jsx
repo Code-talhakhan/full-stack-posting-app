@@ -7,6 +7,9 @@ import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
+import { useEffect } from "react"
+import { baseUrl } from "./core"
+import { store } from "./store/states"
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -19,7 +22,32 @@ axios.interceptors.request.use((config) => {
 });
 
 
-function App() {
+const App = () => {
+  const { global_login, global_logout } = store()
+
+
+  useEffect(() => {
+    get_profile()
+  }, [])
+
+
+  const get_profile = async() => {
+    try {
+      const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
+        headers:{
+          token: localStorage.getItem("token")
+        }
+      })
+      console.log(resp.data.data)
+      global_login()
+      
+    } catch (error) {
+      console.error(error)
+      global_logout()
+    }
+  }
+
+
   return (
     <>
       <Toaster position="top-right" richColors />

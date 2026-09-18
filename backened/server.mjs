@@ -1,6 +1,6 @@
 import "dotenv/config"
 import express from "express"
-import {postRoutes, authRoutes} from "./routes/index.mjs"
+import {postRoutes, authRoutes, profileRoutes} from "./routes/index.mjs"
 import cors from "cors"
 import {connect_database} from "./libs/mongodb.mjs"
 import { authGuardJWT } from "./middlewares/jwt/index.mjs"

@@ -4,11 +4,11 @@ import axios from "axios"
 import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
-import loginPic from "../assets/signup-pic.png" // Update image name here if you generated a new one
+import loginPic from "../assets/signup-pic.png" 
 
 const baseUrl = "http://localhost:3001"
 
-// Inline Input Component with Password Toggle Support
+
 const Input = ({ label, type = "text", placeholder, value, onChange, isPassword }) => {
   const [showPassword, setShowPassword] = useState(false)
   const currentType = isPassword ? (showPassword ? "text" : "password") : type
@@ -42,7 +42,7 @@ const Input = ({ label, type = "text", placeholder, value, onChange, isPassword 
   )
 }
 
-// Inline Button Component
+
 const Button = ({ children, disabled, type = "button", onClick }) => {
   return (
     <button
@@ -88,8 +88,9 @@ const Login = () => {
           border: 'none',
         },
       })
+      localStorage.setItem("token", resp.data.data)
 
-      // Token Save
+     
       if (resp?.data?.data?.token) {
         localStorage.setItem("token", resp.data.data.token)
       }
@@ -117,7 +118,7 @@ const Login = () => {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 
-      
+     
       <div className="relative z-10 w-full max-w-4xl bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-[90vh] overflow-hidden">
         
         
@@ -167,7 +168,7 @@ const Login = () => {
         
         <div className="hidden md:flex w-1/2 bg-[#fdfafb] p-8 flex-col items-center justify-center border-l border-gray-100">
           
-          
+        
           <div className="w-full max-w-[450px] mb-6 flex items-center justify-center">
             <img 
               src={loginPic} 
