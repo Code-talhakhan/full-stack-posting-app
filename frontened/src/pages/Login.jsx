@@ -5,9 +5,9 @@ import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import loginPic from "../assets/signup-pic.png" 
+import { store } from "../store/states" 
 
 const baseUrl = "http://localhost:3001"
-
 
 const Input = ({ label, type = "text", placeholder, value, onChange, isPassword }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -42,7 +42,6 @@ const Input = ({ label, type = "text", placeholder, value, onChange, isPassword 
   )
 }
 
-
 const Button = ({ children, disabled, type = "button", onClick }) => {
   return (
     <button
@@ -57,6 +56,7 @@ const Button = ({ children, disabled, type = "button", onClick }) => {
 }
 
 const Login = () => {
+  const { global_login } = store() 
   const [email, set_email] = useState("")
   const [password, set_password] = useState("")
   const [loading, set_loading] = useState(false)
@@ -79,7 +79,6 @@ const Login = () => {
         password: password,
       })
 
-      
       toast("Login Successful!", {
         icon: <CheckCircle2 size={20} className="text-white" />,
         style: {
@@ -88,13 +87,14 @@ const Login = () => {
           border: 'none',
         },
       })
-      localStorage.setItem("token", resp.data.data)
 
-     
+      // Token save aur global state update
       if (resp?.data?.data?.token) {
         localStorage.setItem("token", resp.data.data.token)
+        global_login(resp.data.data) 
       }
 
+      
       navigate("/")
 
     } catch (error) {
@@ -113,17 +113,12 @@ const Login = () => {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="min-h-screen w-full relative flex items-center justify-center p-4 sm:p-6 overflow-hidden font-sans bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]"
     >
-      
-      
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 
-     
       <div className="relative z-10 w-full max-w-4xl bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-[90vh] overflow-hidden">
         
-        
         <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-white">
-          
           <div className="text-center mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-[#5E1243]">Welcome Back</h2>
             <p className="text-sm text-gray-500 mt-1">Please enter your details to sign in</p>
@@ -162,13 +157,9 @@ const Login = () => {
               Sign up
             </Link>
           </p>
-
         </div>
 
-        
         <div className="hidden md:flex w-1/2 bg-[#fdfafb] p-8 flex-col items-center justify-center border-l border-gray-100">
-          
-        
           <div className="w-full max-w-[450px] mb-6 flex items-center justify-center">
             <img 
               src={loginPic} 
@@ -190,7 +181,6 @@ const Login = () => {
             <div className="w-8 h-2 bg-[#851D52] rounded-full"></div>
           </div>
         </div>
-
       </div>
     </motion.div>
   )

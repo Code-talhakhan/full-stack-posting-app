@@ -1,25 +1,21 @@
+import { create } from "zustand"
 
-export const store = create((update) => {
-    return {
-       
-        user: null,
-        isLogin: null,
+export const store = create((set) => ({
+    user: null,
+    isLogin: null,
 
-        
+    // Accept payload as a parameter
+    global_login: (userData) => {
+        set({
+            user: userData,
+            isLogin: true,
+        })
+    },
 
-        global_login: () => {
-            update((state) => ({
-                user: "some user detailes",
-                isLogin: true
-            }))
-        },
-
-        global_logout: () => {
-            update((state) => ({
-                user: null,
-                isLogin: false,
-            }))
-        },
-
-    }
-})
+    global_logout: () => {
+        set({
+            user: null,
+            isLogin: false,
+        })
+    },
+}))

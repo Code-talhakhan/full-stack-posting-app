@@ -4,10 +4,16 @@ import bcrypt from "bcryptjs"
 
 const router = express.Router()
 
-// get profile
 
 router.get("/profile", async (req, res, next) => {
     try {
+        
+        if (!req.currentUser) {
+            return res.status(401).send({
+                message: "unauthorized: no token provided or invalid token"
+            })
+        }
+
         return res.send({
             message: "profile fetched",
             data: req.currentUser
@@ -24,6 +30,10 @@ router.get("/profile", async (req, res, next) => {
 // update profile
 router.put("/profile", async (req, res, next) => {
     try {
+        if (!req.currentUser) {
+            return res.status(401).send({ message: "unauthorized" })
+        }
+
         const firstname = req.body.firstname
         const lastname = req.body.lastname
 
@@ -57,17 +67,21 @@ router.put("/profile", async (req, res, next) => {
     }
 })
 
-// updated passward
-router.put("/passward", async (req, res, next) => {
+
+router.put("/password", async (req, res, next) => {
     try {
-        const currentPassward = req.body.currentPassward
-        const newPassward = req.body.newPassward
+        if (!req.currentUser) {
+            return res.status(401).send({ message: "unauthorized" })
+        }
 
-        const isCurrentPasswardTrue = await bcrypt.compare(currentPassward, req.currentUser.password)
+        const currentPassword = req.body.currentPassword
+        const newPassword = req.body.newPassword
 
-        if(!isCurrentPasswardTrue){
+        const isCurrentPasswordTrue = await bcrypt.compare(currentPassword, req.currentUser.password)
+
+        if(!isCurrentPasswordTrue){
             return res.status(400).send({
-            message: "current passward is invalid",
+            message: "current password is invalid",
         })
 
         }
@@ -81,7 +95,7 @@ router.put("/passward", async (req, res, next) => {
         })
 
         return res.send({
-            message: "passward updated",
+            message: "password updated",
         })
 
     } catch (error) {
@@ -91,9 +105,5 @@ router.put("/passward", async (req, res, next) => {
         })
     }
 })
-
- 
-
- 
 
 export default router

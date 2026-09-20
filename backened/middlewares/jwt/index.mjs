@@ -6,11 +6,11 @@ export const authGuardJWT = async (req, res, next) => {
 
  
  const authHeader = req.headers.authorization;
- console.log("authHeader ==>", authHeader);
+//  console.log("authHeader ==>", authHeader);
 
 
  const token = authHeader && authHeader.split(" ")[1];
- console.log("token ==>", token);
+//  console.log("token ==>", token);
 
  if (!token) {
   return res.status(401).json({ message: "unauthorized!" });
