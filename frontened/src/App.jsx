@@ -37,23 +37,22 @@ const App = () => {
     try {
       const token = localStorage.getItem("token");
       
-      // Agar token majood hi nahi hai, toh API call ki zaroorat nahi.
-      // Direct logout state set karein, lekin 2 second delay ke sath taake splash screen dikhe.
+     
       if (!token) {
         setTimeout(() => {
           global_logout();
-        }, 2000); // 2 seconds ka splash screen
+        }, 2000); 
         return;
       }
 
-      // Agar token hai, toh backend se verify karein
+      
       const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
         headers: {
           token: token
         }
       });
       
-      // Success hone par 2 second baad login true karein aur data pass karein
+     
       setTimeout(() => {
         global_login(resp.data);
       }, 1000);
@@ -61,7 +60,7 @@ const App = () => {
     } catch (error) {
       console.error(error);
       
-      // Error aane par (jaise invalid expire token) bhi 2 second baad logout karein
+     
       setTimeout(() => {
         global_logout();
       }, 1000);

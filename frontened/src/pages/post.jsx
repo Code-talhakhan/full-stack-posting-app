@@ -3,6 +3,7 @@ import Form from '../component/form'
 import axios from 'axios'
 import moment from "moment"
 import { Edit2, Trash2, Clock } from 'lucide-react'
+import Header from "../component/Header"
 
 const API_URL = "http://localhost:3001/api/v1/post"
 
@@ -65,6 +66,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-stone-100 text-stone-900 p-4 md:p-8">
+      <Header />
       <Form getAllPosts={getAllPosts} />
 
       <div className="w-full max-w-xl mx-auto space-y-4">
