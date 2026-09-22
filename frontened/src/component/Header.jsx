@@ -106,14 +106,11 @@ const Header = () => {
               <Link to="/" className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <motion.div 
                   whileTap={{ scale: 0.9 }}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 select-none ${
-                    isActive('/') 
-                      ? 'bg-white shadow-sm text-[#851D52]' 
-                      : 'text-gray-500 hover:text-[#851D52] hover:bg-white/50'
-                  }`}
+                  className="px-4 py-2.5 rounded-xl flex items-center gap-2 select-none"
+                  style={{ backgroundColor: '#ffffff', color: '#851D52' }}
                 >
-                  <Home size={20} strokeWidth={isActive('/') ? 2.5 : 2} />
-                  <span className={`text-sm font-medium ${isActive('/') ? 'font-semibold' : ''}`}>
+                  <Home size={20} strokeWidth={2.5} />
+                  <span className="text-sm font-medium" style={{ fontWeight: 600 }}>
                     Feed
                   </span>
                 </motion.div>
@@ -122,14 +119,11 @@ const Header = () => {
               <Link to="/chat" className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <motion.div 
                   whileTap={{ scale: 0.9 }}
-                  className={`px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all duration-200 select-none ${
-                    isActive('/chat') 
-                      ? 'bg-white shadow-sm text-[#851D52]' 
-                      : 'text-gray-500 hover:text-[#851D52] hover:bg-white/50'
-                  }`}
+                  className="px-4 py-2.5 rounded-xl flex items-center gap-2 select-none"
+                  style={{ backgroundColor: '#ffffff', color: '#851D52' }}
                 >
-                  <MessageCircle size={20} strokeWidth={isActive('/chat') ? 2.5 : 2} />
-                  <span className={`text-sm font-medium ${isActive('/chat') ? 'font-semibold' : ''}`}>
+                  <MessageCircle size={20} strokeWidth={2.5} />
+                  <span className="text-sm font-medium" style={{ fontWeight: 600 }}>
                     Chat
                   </span>
                 </motion.div>
@@ -215,24 +209,22 @@ const Header = () => {
                 <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <motion.div 
                     whileTap={{ scale: 0.95 }}
-                    className={`p-3 rounded-xl flex items-center gap-3 transition-colors select-none ${
-                      isActive('/') ? 'bg-[#fdfafb] text-[#851D52]' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className="p-3 rounded-xl flex items-center gap-3 select-none"
+                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
                   >
-                    <Home size={20} strokeWidth={isActive('/') ? 2.5 : 2} />
-                    <span className={`font-medium ${isActive('/') ? 'font-semibold' : ''}`}>Feed</span>
+                    <Home size={20} strokeWidth={2.5} />
+                    <span className="font-medium" style={{ fontWeight: 600 }}>Feed</span>
                   </motion.div>
                 </Link>
 
                 <Link to="/chat" onClick={() => setIsMobileMenuOpen(false)} className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <motion.div 
                     whileTap={{ scale: 0.95 }}
-                    className={`p-3 rounded-xl flex items-center gap-3 transition-colors select-none ${
-                      isActive('/chat') ? 'bg-[#fdfafb] text-[#851D52]' : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className="p-3 rounded-xl flex items-center gap-3 select-none"
+                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
                   >
-                    <MessageCircle size={20} strokeWidth={isActive('/chat') ? 2.5 : 2} />
-                    <span className={`font-medium ${isActive('/chat') ? 'font-semibold' : ''}`}>Chat</span>
+                    <MessageCircle size={20} strokeWidth={2.5} />
+                    <span className="font-medium" style={{ fontWeight: 600 }}>Chat</span>
                   </motion.div>
                 </Link>
               </div>
