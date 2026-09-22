@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import axios from 'axios'
 import { PlusCircle, Type, FileText } from 'lucide-react'
-import { toast } from 'sonner' // Sonner toast import kiya
+import { toast } from 'sonner' 
 
 const API_URL = 'http://localhost:3001/api/v1/post'
 
@@ -28,9 +28,9 @@ export default function Form({ getAllPosts }) {
       await axios.post(API_URL, newPost)
       titleRef.current.value = ''
       descRef.current.value = ''
-      
+
       if (getAllPosts) getAllPosts()
-      
+
       toast.success('Post created successfully!')
     } catch (error) {
       console.error('Error adding post:', error)
@@ -38,15 +38,16 @@ export default function Form({ getAllPosts }) {
     }
   }
 
+  // Yahan shadow ki jagah 'before:' pseudo element se gradient left border lagaya gaya hai
   return (
-    <div className="w-full max-w-xl mx-auto mb-8 p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl font-sans">
+    <div className="relative overflow-hidden w-full max-w-2xl mx-auto mb-8 p-6 bg-white border border-gray-100 rounded-[2rem] shadow-xl font-sans transition-all duration-300 before:absolute before:top-0 before:left-0 before:h-full before:w-[6px] before:bg-gradient-to-b before:from-[#5E1243] before:to-[#9c1f52]">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-        <div className="p-2.5 bg-[#4361EE] text-white rounded-2xl shadow-md shadow-blue-500/20">
+        <div className="p-2.5 bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] text-white rounded-2xl shadow-md shadow-[#851D52]/20">
           <PlusCircle className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-gray-800">
-            MongoDB-Crud
+          <h2 className="text-xl font-bold tracking-tight text-[#5E1243]">
+            Create Post
           </h2>
           <p className="text-xs text-gray-400 font-medium">
             Create and manage posts
@@ -54,8 +55,8 @@ export default function Form({ getAllPosts }) {
         </div>
       </div>
 
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-1.5 text-left">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-1 text-left">
           <label className="text-[12px] font-medium text-gray-500 ml-1">
             Title
           </label>
@@ -64,22 +65,22 @@ export default function Form({ getAllPosts }) {
             <input
               type="text"
               placeholder="Title..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F3F5F9] border-none rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]/50 transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-[#F3F5F9] border-none rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/50 transition-all"
               ref={titleRef}
             />
           </div>
         </div>
 
-        <div className="flex flex-col gap-1.5 text-left">
+        <div className="flex flex-col gap-1 text-left">
           <label className="text-[12px] font-medium text-gray-500 ml-1">
             Description
           </label>
           <div className="relative">
-            <FileText className="w-4 h-4 absolute left-3.5 top-3 text-gray-400 pointer-events-none" />
+            <FileText className="w-4 h-4 absolute left-3.5 top-2.5 text-gray-400 pointer-events-none" />
             <textarea
               placeholder="Description..."
-              rows={4}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F3F5F9] border-none rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#4361EE]/50 transition-all resize-none"
+              rows={3}
+              className="w-full pl-10 pr-4 py-2 bg-[#F3F5F9] border-none rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/50 transition-all resize-none"
               ref={descRef}
             ></textarea>
           </div>
@@ -87,7 +88,7 @@ export default function Form({ getAllPosts }) {
 
         <div className="pt-2 flex justify-end">
           <button
-            className="inline-flex items-center justify-center gap-2 bg-[#4361EE] hover:bg-[#3651D4] text-white font-medium text-sm rounded-xl px-8 py-3 cursor-pointer active:scale-[0.98] transition-all duration-200 shadow-lg shadow-blue-500/30"
+            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5E1243] to-[#9c1f52] hover:opacity-90 text-white font-medium text-sm rounded-xl px-8 py-3 cursor-pointer active:scale-[0.98] transition-all duration-200 shadow-lg shadow-[#5E1243]/20"
             type="submit"
           >
             Submit
