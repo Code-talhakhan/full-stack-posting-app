@@ -131,20 +131,15 @@ const Post = () => {
 
       <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-8">
 
-        {/* Yahan se wrapper div hata diya gaya hai, sirf Form component hai */}
+        
         <Form getAllPosts={getAllPosts} />
 
-        {/* Feed Section */}
+        
         <div className="flex items-center justify-between mb-6 pl-2">
           <div className="flex items-center gap-3">
             <div className="h-6 w-1.5 bg-gradient-to-b from-[#4a0d33] to-[#e87163] rounded-full"></div>
             <h3 className="text-xl font-bold text-gray-800 tracking-tight">Your Feed</h3>
           </div>
-          {!loading && posts.length > 0 && (
-            <span className="text-xs font-semibold text-[#851D52] bg-[#851D52]/10 px-3 py-1 rounded-full">
-              {posts.length} {posts.length === 1 ? "post" : "posts"}
-            </span>
-          )}
         </div>
 
         {loading ? (

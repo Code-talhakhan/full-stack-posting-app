@@ -159,14 +159,21 @@ const Header = () => {
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="absolute top-14 right-0 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-black py-1.5 z-50 overflow-hidden"
                 >
-                  <div className="px-4 py-2.5 border-b border-gray-50 select-none">
-                    <p className="text-gray-900 font-semibold text-[15px] truncate capitalize">
+                  
+                  {/* Yeh part change kiya gaya hai - Ab name aur email dono clickable hain aur profile page par le jayenge */}
+                  <Link 
+                    to="/profile"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="block px-4 py-3 border-b border-gray-50 hover:bg-[#fdfafb] transition-colors outline-none select-none cursor-pointer"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    <p className="text-gray-900 font-semibold text-[15px] truncate capitalize hover:text-[#851D52] transition-colors">
                       {firstName} {lastName}
                     </p>
                     <p className="text-gray-500 text-[13px] truncate mt-0.5">
                       {email}
                     </p>
-                  </div>
+                  </Link>
 
                   <div className="py-1.5">
                     <Link 

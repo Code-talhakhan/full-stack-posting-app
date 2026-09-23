@@ -79,14 +79,15 @@ const Login = () => {
         password: password,
       })
 
-      toast("Login Successful!", {
-        icon: <CheckCircle2 size={20} className="text-white" />,
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+     toast("Login Successful!", {
+  icon: <CheckCircle2 size={20} className="text-white" />,
+  duration: 1500, 
+  style: {
+    background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
+    color: '#ffffff',
+    border: 'none',
+  },
+})
 
       // Token save aur global state update
       if (resp?.data?.data?.token) {
