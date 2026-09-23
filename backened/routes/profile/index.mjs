@@ -1,22 +1,28 @@
 import express from "express"
-import { UserModel } from "../../models/index.mjs"
+import { UserModel, PostModel } from "../../models/index.mjs" 
 import bcrypt from "bcryptjs"
 
 const router = express.Router()
 
-
 router.get("/profile", async (req, res, next) => {
     try {
-        
         if (!req.currentUser) {
             return res.status(401).send({
                 message: "unauthorized: no token provided or invalid token"
             })
         }
 
+        // Is user ki posts count karein
+        const postCount = await PostModel.countDocuments({ authorId: req.currentUser._id });
+
+        const userData = req.currentUser._doc ? req.currentUser._doc : req.currentUser;
+
         return res.send({
             message: "profile fetched",
-            data: req.currentUser
+            data: {
+                ...userData,
+                postCount: postCount
+            }
         })
 
     } catch (error) {

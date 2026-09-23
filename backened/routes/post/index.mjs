@@ -7,6 +7,13 @@ const router = express.Router()
 // 1. CREATE POST
 router.post("/post", async (req, res, next) => {
     try {
+        // 👇 Sab se pehle check karein ke user login hai ya nahi
+        if (!req.currentUser) {
+            return res.status(401).send({
+                message: "unauthorized: please login first"
+            })
+        }
+
         if (!req.body.title) {
             return res.status(400).send({
                 message: "Title field cannot be empty"
@@ -19,9 +26,11 @@ router.post("/post", async (req, res, next) => {
             })
         }
 
+        // 👇 Post create karte waqt authorId attach kar di hai
         await PostModel.create({
             title: req.body.title,
             description: req.body.description,
+            authorId: req.currentUser._id // 👈 Ye user ki ID database mein save karwayega
         })
 
         return res.send({
