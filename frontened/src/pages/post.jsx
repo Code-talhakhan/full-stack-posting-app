@@ -8,16 +8,15 @@ import { toast } from 'sonner'
 import Header from "../component/Header"
 
 const API_URL = "http://localhost:3001/api/v1/post"
+const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const Post = () => {
   const [posts, set_posts] = useState([])
   const [loading, set_loading] = useState(true)
 
-  // Delete confirmation modal state
   const [deleteTarget, set_deleteTarget] = useState(null)
   const [deleting, set_deleting] = useState(false)
 
-  // Edit modal state
   const [editTarget, set_editTarget] = useState(null)
   const [editTitle, set_editTitle] = useState("")
   const [editDescription, set_editDescription] = useState("")
@@ -40,7 +39,6 @@ const Post = () => {
     }
   }
 
-  // ---------- Delete flow ----------
   const openDeleteModal = (postId) => {
     if (!postId) {
       toast.error("Post id is required")
@@ -76,7 +74,6 @@ const Post = () => {
     }
   }
 
-  // ---------- Edit flow ----------
   const openEditModal = (postId, title, description) => {
     if (!postId) {
       toast.error("Post id is required")
@@ -130,11 +127,8 @@ const Post = () => {
       <Header />
 
       <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-8">
-
-        
         <Form getAllPosts={getAllPosts} />
 
-        
         <div className="flex items-center justify-between mb-6 pl-2">
           <div className="flex items-center gap-3">
             <div className="h-6 w-1.5 bg-gradient-to-b from-[#4a0d33] to-[#e87163] rounded-full"></div>
@@ -167,7 +161,6 @@ const Post = () => {
                 posts.map((singlePost, index) => {
                   const postId = singlePost._id || singlePost.id
                   const postDate = singlePost.updatedAt || singlePost.createdAt
-                  const postInitial = singlePost.title ? singlePost.title.charAt(0).toUpperCase() : 'B'
 
                   return (
                     <motion.div
@@ -181,18 +174,25 @@ const Post = () => {
                     >
                       <div className="flex items-start gap-4">
 
-                        {/* Avatar */}
-                        <div className="hidden sm:flex w-12 h-12 rounded-full bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex-shrink-0 items-center justify-center text-white font-bold text-lg shadow-md shadow-[#851D52]/20">
-                          {postInitial}
+                        {/* Exact Profile Image instead of SVG */}
+                        <div className="hidden sm:flex w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex-shrink-0 shadow-md shadow-[#851D52]/20">
+                          <img 
+                            src={DEFAULT_AVATAR} 
+                            alt="User" 
+                            className="w-full h-full rounded-full object-cover border border-white"
+                          />
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          {/* Post Header */}
                           <div className="flex justify-between items-start mb-2 gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 sm:hidden mb-1">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4a0d33] to-[#851D52] flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                                  {postInitial}
+                                <div className="w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-br from-[#4a0d33] to-[#851D52]">
+                                  <img 
+                                    src={DEFAULT_AVATAR} 
+                                    alt="User" 
+                                    className="w-full h-full rounded-full object-cover border border-white"
+                                  />
                                 </div>
                                 <h4 className="font-bold text-gray-900 text-[16px] truncate">{singlePost.title}</h4>
                               </div>
@@ -207,12 +207,10 @@ const Post = () => {
                             </div>
                           </div>
 
-                          {/* Post Description */}
                           <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words mt-2 mb-4">
                             {singlePost.description}
                           </p>
 
-                          {/* Action Buttons */}
                           <div className="flex items-center gap-6 border-t border-gray-100 pt-3 mt-2">
                             <button
                               onClick={() => openEditModal(postId, singlePost.title, singlePost.description)}
@@ -258,7 +256,7 @@ const Post = () => {
         )}
       </main>
 
-      {/* ---------- Delete Confirmation Modal ---------- */}
+      {/* Delete Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <motion.div
@@ -305,7 +303,7 @@ const Post = () => {
         )}
       </AnimatePresence>
 
-      {/* ---------- Edit Modal ---------- */}
+      {/* Edit Modal */}
       <AnimatePresence>
         {editTarget && (
           <motion.div

@@ -6,6 +6,7 @@ import axios from 'axios'
 import { store } from '../store/states'
 
 const baseUrl = "http://localhost:3001"
+const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -49,7 +50,6 @@ const Header = () => {
   const firstName = userData.firstname || "User"
   const lastName = userData.lastname || ""
   const email = userData.email || "user@gmail.com"
-  const userInitial = firstName.charAt(0).toUpperCase()
 
   const handleLogout = () => {
     localStorage.removeItem("token")
@@ -59,7 +59,6 @@ const Header = () => {
     navigate("/login")
   }
 
-  // Updated to handle sub-routes like /chat/123 properly
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
@@ -76,7 +75,6 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           
           <div className="flex items-center gap-4 sm:gap-8">
-            
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="sm:hidden p-2 text-gray-600 hover:text-[#851D52] hover:bg-white/50 rounded-lg transition-colors outline-none"
@@ -132,15 +130,21 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-3 relative">
+            
+            {/* Direct Image instead of SVG */}
             <button 
               onClick={() => {
                 setIsDropdownOpen(!isDropdownOpen)
                 setIsMobileMenuOpen(false)
               }}
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4a0d33] to-[#851D52] flex items-center justify-center text-white font-semibold text-lg shadow-md hover:opacity-90 transition-all active:scale-95 z-50 uppercase border-none outline-none ring-0 select-none"
+              className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] shadow-md hover:opacity-90 transition-all active:scale-95 z-50 border-none outline-none ring-0 select-none cursor-pointer"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              {userInitial}
+              <img 
+                src={userData?.profilePicture || DEFAULT_AVATAR} 
+                alt="Profile" 
+                className="w-full h-full rounded-full object-cover border border-white"
+              />
             </button>
 
             {isDropdownOpen && (
@@ -159,8 +163,6 @@ const Header = () => {
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="absolute top-14 right-0 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-black py-1.5 z-50 overflow-hidden"
                 >
-                  
-                  {/* Yeh part change kiya gaya hai - Ab name aur email dono clickable hain aur profile page par le jayenge */}
                   <Link 
                     to="/profile"
                     onClick={() => setIsDropdownOpen(false)}
@@ -188,7 +190,7 @@ const Header = () => {
 
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-left outline-none"
+                      className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-left outline-none cursor-pointer"
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
                       <LogOut size={18} strokeWidth={2} />
