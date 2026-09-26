@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { store } from '../store/states'
 import axios from 'axios'
 import { baseUrl } from '../core'
@@ -18,44 +18,65 @@ const toastStyle = {
 
 const Profile = () => {
   const navigate = useNavigate()
+  const { userId } = useParams() // 👇 URL se userId nikal rahe hain
   const { user, global_login } = store()
 
-  // 👇 Yahan humne useEffect laga diya taake page load hote hi latest postCount fetch ho jaye
+  const [viewUser, setViewUser] = useState(null)
+  const [loadingProfile, setLoadingProfile] = useState(true)
+
+  // 👇 Check kar rahe hain ke yeh apni profile hai ya kisi aur ki
+  const loggedInUserData = user?.data || user || {}
+  const isOwnProfile = !userId || userId === loggedInUserData._id
+
   useEffect(() => {
-    const fetchLatestProfile = async () => {
+    const fetchProfileData = async () => {
       try {
-        const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
-          headers: { token: localStorage.getItem("token") }
-        })
-        // Backend se fresh data (with postCount) laa kar store mein save kar diya
-        global_login(resp.data)
+        setLoadingProfile(true)
+        if (!isOwnProfile && userId) {
+          // 1. Agar kisi aur ki profile hai, toh uski ID se data mangwayein
+          // Note: Agar backend ka route different ho toh yahan change kar lein
+          const resp = await axios.get(`${baseUrl}/api/v1/user/${userId}`, {
+            headers: { token: localStorage.getItem("token") }
+          })
+          setViewUser(resp.data.data || resp.data)
+        } else {
+          // 2. Agar apni profile hai, toh apna data fresh mangwayein aur store update karein
+          const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
+            headers: { token: localStorage.getItem("token") }
+          })
+          global_login(resp.data)
+          setViewUser(resp.data.data || resp.data)
+        }
       } catch (error) {
-        console.error("Failed to fetch fresh profile data", error)
+        console.error("Failed to fetch profile data", error)
+        toast.error("Failed to load profile data")
+      } finally {
+        setLoadingProfile(false)
       }
     }
-    fetchLatestProfile()
-  }, [])
-  // 👆 API Call End
+    fetchProfileData()
+  }, [userId, isOwnProfile]) // Jab bhi URL mein userId change ho, yeh dobara chalay ga
 
-  const userData = user?.data || user || {}
+  // 👇 Display karne ke liye data decide kar rahe hain
+  const displayData = isOwnProfile ? loggedInUserData : (viewUser || {})
 
-  const defaultFirstName = userData?.firstname || "Name not found"
-  const defaultLastName = userData?.lastname || ""
-  const defaultEmail = userData?.email || "Email not found"
-  const defaultPostCount = userData?.postCount || 0
-  const memberSince = userData?.createdAt 
-    ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
-    : "Sep 2026"
+  const defaultFirstName = displayData?.firstname || displayData?.firstName || displayData?.name || "User"
+  const defaultLastName = displayData?.lastname || displayData?.lastName || ""
+  const defaultEmail = displayData?.email || "Email not found"
+  const defaultPostCount = displayData?.postCount || 0
+  const memberSince = displayData?.createdAt 
+    ? new Date(displayData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
+    : "Recently"
 
   const [editOpen, set_editOpen] = useState(false)
   const [securityOpen, set_securityOpen] = useState(false)
   
-  const [editFirstname, set_editFirstname] = useState(defaultFirstName !== "Name not found" ? defaultFirstName : "")
-  const [editLastname, set_editLastname] = useState(defaultLastName)
+  const [editFirstname, set_editFirstname] = useState("")
+  const [editLastname, set_editLastname] = useState("")
   const [savingName, set_savingName] = useState(false)
 
   const openEditModal = () => {
-    set_editFirstname(defaultFirstName !== "Name not found" ? defaultFirstName : "")
+    set_editFirstname(defaultFirstName !== "User" ? defaultFirstName : "")
     set_editLastname(defaultLastName)
     set_editOpen(true)
   }
@@ -83,7 +104,7 @@ const Profile = () => {
       global_login({
         ...user,
         data: {
-          ...userData,
+          ...loggedInUserData,
           firstname: editFirstname,
           lastname: editLastname,
         }
@@ -166,7 +187,7 @@ const Profile = () => {
       global_login({
         ...user,
         data: {
-          ...userData,
+          ...loggedInUserData,
           profilePicture: resp.data.url
         }
       })
@@ -178,6 +199,17 @@ const Profile = () => {
     } finally {
       set_uploading(false)
     }
+  }
+
+  if (loadingProfile && !viewUser) {
+    return (
+      <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20 flex flex-col">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-[#851D52] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -193,7 +225,9 @@ const Profile = () => {
             <ArrowLeft size={20} strokeWidth={2} />
           </button>
           <div className="h-6 w-1.5 bg-gradient-to-b from-[#4a0d33] to-[#e87163] rounded-full"></div>
-          <h2 className="text-2xl font-bold text-gray-800 tracking-tight">Your Profile</h2>
+          <h2 className="text-2xl font-bold text-gray-800 tracking-tight">
+            {isOwnProfile ? "Your Profile" : `${defaultFirstName}'s Profile`}
+          </h2>
         </div>
 
         <motion.div
@@ -205,30 +239,34 @@ const Profile = () => {
           <div className="relative w-32 h-32 flex-shrink-0">
             <div className="w-32 h-32 rounded-full p-[3px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]">
               <img
-                src={userData?.profilePicture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"}
+                src={displayData?.profilePicture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"}
                 alt="Profile"
                 className="w-full h-full rounded-full object-cover border-2 border-white bg-white"
               />
             </div>
 
-            <input
-              type="file"
-              hidden
-              id="profile-selector"
-              accept="image/*"
-              onChange={(e) => upload_file(e.target.files[0])}
-            />
-
-            <label
-              htmlFor="profile-selector"
-              className="absolute right-0 bottom-0 w-9 h-9 rounded-full bg-gradient-to-r from-[#5E1243] to-[#9c1f52] flex items-center justify-center shadow-lg shadow-[#5E1243]/30 cursor-pointer hover:opacity-90 transition-opacity"
-            >
-              <Camera size={16} className="text-white" strokeWidth={2} />
-            </label>
+            {/* 👇 Sirf tab camera icon show hoga jab user apni profile par ho */}
+            {isOwnProfile && (
+              <>
+                <input
+                  type="file"
+                  hidden
+                  id="profile-selector"
+                  accept="image/*"
+                  onChange={(e) => upload_file(e.target.files[0])}
+                />
+                <label
+                  htmlFor="profile-selector"
+                  className="absolute right-0 bottom-0 w-9 h-9 rounded-full bg-gradient-to-r from-[#5E1243] to-[#9c1f52] flex items-center justify-center shadow-lg shadow-[#5E1243]/30 cursor-pointer hover:opacity-90 transition-opacity"
+                >
+                  <Camera size={16} className="text-white" strokeWidth={2} />
+                </label>
+              </>
+            )}
           </div>
 
           <div className="flex flex-col items-center sm:items-start flex-1 w-full mt-2">
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">
+            <h3 className="text-2xl font-bold text-gray-900 mb-1 capitalize">
               {defaultFirstName} {defaultLastName}
             </h3>
             <p className="text-[#851D52] font-medium mb-5">{defaultEmail}</p>
@@ -237,20 +275,23 @@ const Profile = () => {
               <p className="text-xs text-gray-400 mb-4">Uploading photo...</p>
             )}
 
-            <div className="flex items-center gap-3">
-              <button
-                onClick={openEditModal}
-                className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Edit Profile
-              </button>
-              <button
-                onClick={() => set_securityOpen(true)}
-                className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Security
-              </button>
-            </div>
+            {/* 👇 Sirf tab buttons show honge jab user apni profile par ho */}
+            {isOwnProfile && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={openEditModal}
+                  className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={() => set_securityOpen(true)}
+                  className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Security
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -283,7 +324,7 @@ const Profile = () => {
       </main>
 
       <AnimatePresence>
-        {editOpen && (
+        {editOpen && isOwnProfile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -350,7 +391,7 @@ const Profile = () => {
       </AnimatePresence>
 
       <AnimatePresence>
-        {securityOpen && (
+        {securityOpen && isOwnProfile && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

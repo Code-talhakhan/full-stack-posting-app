@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Form from '../component/form'
 import axios from 'axios'
 import moment from "moment"
-import { Edit2, Trash2, Clock, MessageSquareOff, X, AlertTriangle, Save } from 'lucide-react'
+import { Edit2, Trash2, Clock, MessageSquareOff, X, AlertTriangle, Save, MoreVertical } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import Header from "../component/Header"
+import { store } from '../store/states'
 
 const API_URL = "http://localhost:3001/api/v1/post"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const Post = () => {
+  const { user } = store()
   const [posts, set_posts] = useState([])
   const [loading, set_loading] = useState(true)
+  const [activeDropdown, setActiveDropdown] = useState(null)
 
   const [deleteTarget, set_deleteTarget] = useState(null)
   const [deleting, set_deleting] = useState(false)
@@ -144,9 +148,11 @@ const Post = () => {
                 className="bg-white p-5 sm:p-6 rounded-[24px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] animate-pulse"
               >
                 <div className="flex items-start gap-4">
-                  <div className="hidden sm:block w-12 h-12 rounded-full bg-gray-100 flex-shrink-0"></div>
-                  <div className="flex-1 space-y-3">
-                    <div className="h-4 bg-gray-100 rounded-full w-1/3"></div>
+                  <div className="w-11 h-11 rounded-full bg-gray-100 flex-shrink-0"></div>
+                  <div className="flex-1 space-y-3 mt-1">
+                    <div className="h-4 bg-gray-100 rounded-full w-1/4"></div>
+                    <div className="h-3 bg-gray-100 rounded-full w-1/6"></div>
+                    <div className="h-4 bg-gray-100 rounded-full w-1/3 mt-4"></div>
                     <div className="h-3 bg-gray-100 rounded-full w-full"></div>
                     <div className="h-3 bg-gray-100 rounded-full w-2/3"></div>
                   </div>
@@ -161,6 +167,13 @@ const Post = () => {
                 posts.map((singlePost, index) => {
                   const postId = singlePost._id || singlePost.id
                   const postDate = singlePost.updatedAt || singlePost.createdAt
+                  
+                  const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
+                  const loggedInUser = user?.data || user || {}
+
+                  const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || loggedInUser?.firstname || loggedInUser?.firstName || loggedInUser?.name || "User"
+                  const lastName = postAuthor?.lastname || postAuthor?.lastName || loggedInUser?.lastname || loggedInUser?.lastName || ""
+                  const profilePic = postAuthor?.profilePicture || loggedInUser?.profilePicture || DEFAULT_AVATAR
 
                   return (
                     <motion.div
@@ -170,70 +183,86 @@ const Post = () => {
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ duration: 0.25, delay: index * 0.05 }}
                       key={postId}
-                      className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 hover:shadow-[0_8px_30px_rgba(133,29,82,0.08)] transition-all duration-300"
+                      className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 hover:shadow-[0_8px_30px_rgba(133,29,82,0.08)] transition-all duration-300 relative"
                     >
-                      <div className="flex items-start gap-4">
-
-                        {/* Exact Profile Image instead of SVG */}
-                        <div className="hidden sm:flex w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex-shrink-0 shadow-md shadow-[#851D52]/20">
-                          <img 
-                            src={DEFAULT_AVATAR} 
-                            alt="User" 
-                            className="w-full h-full rounded-full object-cover border border-white"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-start mb-2 gap-3">
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 sm:hidden mb-1">
-                                <div className="w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-br from-[#4a0d33] to-[#851D52]">
-                                  <img 
-                                    src={DEFAULT_AVATAR} 
-                                    alt="User" 
-                                    className="w-full h-full rounded-full object-cover border border-white"
-                                  />
-                                </div>
-                                <h4 className="font-bold text-gray-900 text-[16px] truncate">{singlePost.title}</h4>
-                              </div>
-                              <h4 className="hidden sm:block font-bold text-gray-900 text-[18px] leading-tight">
-                                {singlePost.title}
-                              </h4>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 text-xs text-gray-400 font-medium bg-gray-50 px-2.5 py-1 rounded-full whitespace-nowrap flex-shrink-0">
-                              <Clock className="w-3.5 h-3.5" />
+                      <div className="flex justify-between items-start mb-4">
+                        {/* 👇 Yahan Link mein dynamic routing add kardi gayi hai */}
+                        <Link 
+                          to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
+                          className="flex items-center gap-3 group outline-none"
+                        >
+                          <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex-shrink-0 shadow-sm group-hover:shadow-md transition-all">
+                            <img 
+                              src={profilePic} 
+                              alt="User" 
+                              className="w-full h-full rounded-full object-cover border border-white"
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <h4 className="font-bold text-gray-900 text-[15px] capitalize group-hover:text-[#851D52] transition-colors leading-tight">
+                              {firstName} {lastName}
+                            </h4>
+                            <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-0.5">
+                              <Clock className="w-3 h-3" />
                               <span>{postDate ? moment(postDate).fromNow() : "Recently"}</span>
                             </div>
                           </div>
+                        </Link>
 
-                          <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words mt-2 mb-4">
-                            {singlePost.description}
-                          </p>
+                        <div className="relative z-10">
+                          <button
+                            onClick={() => setActiveDropdown(activeDropdown === postId ? null : postId)}
+                            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors outline-none cursor-pointer"
+                          >
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
 
-                          <div className="flex items-center gap-6 border-t border-gray-100 pt-3 mt-2">
-                            <button
-                              onClick={() => openEditModal(postId, singlePost.title, singlePost.description)}
-                              className="flex items-center gap-2 text-gray-400 hover:text-[#851D52] transition-colors group outline-none cursor-pointer"
-                            >
-                              <div className="p-1.5 rounded-full group-hover:bg-[#851D52]/10 transition-colors">
-                                <Edit2 className="w-[18px] h-[18px]" strokeWidth={2} />
-                              </div>
-                              <span className="text-sm font-medium">Edit</span>
-                            </button>
-
-                            <button
-                              onClick={() => openDeleteModal(postId)}
-                              className="flex items-center gap-2 text-gray-400 hover:text-red-500 transition-colors group outline-none cursor-pointer"
-                            >
-                              <div className="p-1.5 rounded-full group-hover:bg-red-50 transition-colors">
-                                <Trash2 className="w-[18px] h-[18px]" strokeWidth={2} />
-                              </div>
-                              <span className="text-sm font-medium">Delete</span>
-                            </button>
-                          </div>
+                          <AnimatePresence>
+                            {activeDropdown === postId && (
+                              <>
+                                <div 
+                                  className="fixed inset-0 z-30" 
+                                  onClick={() => setActiveDropdown(null)}
+                                ></div>
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95, transformOrigin: "top right" }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100 z-40 py-1 overflow-hidden"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      openEditModal(postId, singlePost.title, singlePost.description)
+                                      setActiveDropdown(null)
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors outline-none cursor-pointer"
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      openDeleteModal(postId)
+                                      setActiveDropdown(null)
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-red-500 hover:bg-red-50 transition-colors outline-none cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </button>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
                         </div>
+                      </div>
 
+                      <div className="pl-1">
+                        <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{singlePost.title}</h4>
+                        <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words">
+                          {singlePost.description}
+                        </p>
                       </div>
                     </motion.div>
                   )
@@ -256,7 +285,6 @@ const Post = () => {
         )}
       </main>
 
-      {/* Delete Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <motion.div
@@ -303,7 +331,6 @@ const Post = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Modal */}
       <AnimatePresence>
         {editTarget && (
           <motion.div

@@ -27,17 +27,14 @@ axios.interceptors.request.use((config) => {
 const App = () => {
   const { global_login, global_logout, user, isLogin } = store()
 
-
   useEffect(() => {
     get_profile()
   }, [])
-
 
   const get_profile = async () => {
     try {
       const token = localStorage.getItem("token");
       
-     
       if (!token) {
         setTimeout(() => {
           global_logout();
@@ -45,14 +42,12 @@ const App = () => {
         return;
       }
 
-      
       const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
         headers: {
           token: token
         }
       });
       
-     
       setTimeout(() => {
         global_login(resp.data);
       }, 1000);
@@ -60,7 +55,6 @@ const App = () => {
     } catch (error) {
       console.error(error);
       
-     
       setTimeout(() => {
         global_logout();
       }, 1000);
@@ -78,7 +72,13 @@ const App = () => {
         isLogin == true ?
           <Routes>
             <Route path='/' element={<Posts />} />
-            <Route path='/profile' element={<Profile />} />
+            
+           
+            <Route path='/profile' element={<Profile />} /> 
+            
+            
+            <Route path='/profile/:userId' element={<Profile />} /> 
+            
             <Route path='/chat' element={<chat />} />
             <Route path='*' element={<Navigate to="/" />} />
           </Routes> :
