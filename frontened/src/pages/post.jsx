@@ -26,6 +26,10 @@ const Post = () => {
   const [editDescription, set_editDescription] = useState("")
   const [saving, set_saving] = useState(false)
 
+  // 👇 Logged-in user ki ID safely extract kar li
+  const robustUser = user?.data?.user || user?.user || user?.data || user || {};
+  const currentUserId = robustUser?._id || robustUser?.id;
+
   useEffect(() => {
     getAllPosts()
   }, [])
@@ -169,11 +173,16 @@ const Post = () => {
                   const postDate = singlePost.updatedAt || singlePost.createdAt
                   
                   const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
-                  const loggedInUser = user?.data || user || {}
+                  
+                  // 👇 Post ke author ki ID nikali
+                  const postAuthorId = postAuthor?._id || postAuthor?.id;
+                  
+                  // 👇 Check kiya ke post banane wala main hi hoon ya koi aur
+                  const isMyPost = currentUserId && postAuthorId && String(currentUserId) === String(postAuthorId);
 
-                  const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || loggedInUser?.firstname || loggedInUser?.firstName || loggedInUser?.name || "User"
-                  const lastName = postAuthor?.lastname || postAuthor?.lastName || loggedInUser?.lastname || loggedInUser?.lastName || ""
-                  const profilePic = postAuthor?.profilePicture || loggedInUser?.profilePicture || DEFAULT_AVATAR
+                  const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || robustUser?.firstname || robustUser?.firstName || robustUser?.name || "User"
+                  const lastName = postAuthor?.lastname || postAuthor?.lastName || robustUser?.lastname || robustUser?.lastName || ""
+                  const profilePic = postAuthor?.profilePicture || robustUser?.profilePicture || DEFAULT_AVATAR
 
                   return (
                     <motion.div
@@ -186,7 +195,6 @@ const Post = () => {
                       className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 hover:shadow-[0_8px_30px_rgba(133,29,82,0.08)] transition-all duration-300 relative"
                     >
                       <div className="flex justify-between items-start mb-4">
-                        {/* 👇 Yahan Link mein dynamic routing add kardi gayi hai */}
                         <Link 
                           to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
                           className="flex items-center gap-3 group outline-none"
@@ -209,53 +217,57 @@ const Post = () => {
                           </div>
                         </Link>
 
-                        <div className="relative z-10">
-                          <button
-                            onClick={() => setActiveDropdown(activeDropdown === postId ? null : postId)}
-                            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors outline-none cursor-pointer"
-                          >
-                            <MoreVertical className="w-5 h-5" />
-                          </button>
+                        {/* 👇 Agar ye meri post hai (isMyPost), tabhi yeh 3 dots show honge 👇 */}
+                        {isMyPost && (
+                          <div className="relative z-10">
+                            <button
+                              onClick={() => setActiveDropdown(activeDropdown === postId ? null : postId)}
+                              className="p-1.5 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors outline-none cursor-pointer"
+                            >
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
 
-                          <AnimatePresence>
-                            {activeDropdown === postId && (
-                              <>
-                                <div 
-                                  className="fixed inset-0 z-30" 
-                                  onClick={() => setActiveDropdown(null)}
-                                ></div>
-                                <motion.div
-                                  initial={{ opacity: 0, scale: 0.95, transformOrigin: "top right" }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.95 }}
-                                  transition={{ duration: 0.15 }}
-                                  className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100 z-40 py-1 overflow-hidden"
-                                >
-                                  <button
-                                    onClick={() => {
-                                      openEditModal(postId, singlePost.title, singlePost.description)
-                                      setActiveDropdown(null)
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors outline-none cursor-pointer"
+                            <AnimatePresence>
+                              {activeDropdown === postId && (
+                                <>
+                                  <div 
+                                    className="fixed inset-0 z-30" 
+                                    onClick={() => setActiveDropdown(null)}
+                                  ></div>
+                                  <motion.div
+                                    initial={{ opacity: 0, scale: 0.95, transformOrigin: "top right" }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100 z-40 py-1 overflow-hidden"
                                   >
-                                    <Edit2 className="w-4 h-4" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      openDeleteModal(postId)
-                                      setActiveDropdown(null)
-                                    }}
-                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-red-500 hover:bg-red-50 transition-colors outline-none cursor-pointer"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                  </button>
-                                </motion.div>
-                              </>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                                    <button
+                                      onClick={() => {
+                                        openEditModal(postId, singlePost.title, singlePost.description)
+                                        setActiveDropdown(null)
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors outline-none cursor-pointer"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        openDeleteModal(postId)
+                                        setActiveDropdown(null)
+                                      }}
+                                      className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-red-500 hover:bg-red-50 transition-colors outline-none cursor-pointer"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      Delete
+                                    </button>
+                                  </motion.div>
+                                </>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        )}
+                        {/* 👆 isMyPost condition ends here 👆 */}
                       </div>
 
                       <div className="pl-1">

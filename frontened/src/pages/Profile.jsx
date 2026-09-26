@@ -18,29 +18,33 @@ const toastStyle = {
 
 const Profile = () => {
   const navigate = useNavigate()
-  const { userId } = useParams() // 👇 URL se userId nikal rahe hain
+  const { userId } = useParams() 
   const { user, global_login } = store()
 
   const [viewUser, setViewUser] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
 
-  // 👇 Check kar rahe hain ke yeh apni profile hai ya kisi aur ki
-  const loggedInUserData = user?.data || user || {}
-  const isOwnProfile = !userId || userId === loggedInUserData._id
+  // 👇 FOOLPROOF ID EXTRACTION: Login ya reload, data jahan bhi ho ID nikal aayegi
+  const currentUserId = user?.data?.user?._id 
+                     || user?.user?._id 
+                     || user?.data?._id 
+                     || user?._id;
+
+  const loggedInUserData = user?.data?.user || user?.user || user?.data || user || {};
+
+  // 👇 String conversion taake type mismatch ka koi chance na rahay
+  const isOwnProfile = !userId || String(userId) === String(currentUserId);
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         setLoadingProfile(true)
         if (!isOwnProfile && userId) {
-          // 1. Agar kisi aur ki profile hai, toh uski ID se data mangwayein
-          // Note: Agar backend ka route different ho toh yahan change kar lein
           const resp = await axios.get(`${baseUrl}/api/v1/user/${userId}`, {
             headers: { token: localStorage.getItem("token") }
           })
           setViewUser(resp.data.data || resp.data)
         } else {
-          // 2. Agar apni profile hai, toh apna data fresh mangwayein aur store update karein
           const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
             headers: { token: localStorage.getItem("token") }
           })
@@ -55,9 +59,8 @@ const Profile = () => {
       }
     }
     fetchProfileData()
-  }, [userId, isOwnProfile]) // Jab bhi URL mein userId change ho, yeh dobara chalay ga
+  }, [userId, isOwnProfile]) 
 
-  // 👇 Display karne ke liye data decide kar rahe hain
   const displayData = isOwnProfile ? loggedInUserData : (viewUser || {})
 
   const defaultFirstName = displayData?.firstname || displayData?.firstName || displayData?.name || "User"
@@ -245,7 +248,6 @@ const Profile = () => {
               />
             </div>
 
-            {/* 👇 Sirf tab camera icon show hoga jab user apni profile par ho */}
             {isOwnProfile && (
               <>
                 <input
@@ -275,7 +277,6 @@ const Profile = () => {
               <p className="text-xs text-gray-400 mb-4">Uploading photo...</p>
             )}
 
-            {/* 👇 Sirf tab buttons show honge jab user apni profile par ho */}
             {isOwnProfile && (
               <div className="flex items-center gap-3">
                 <button

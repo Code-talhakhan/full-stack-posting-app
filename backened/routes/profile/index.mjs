@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 
 const router = express.Router()
 
+
 router.get("/profile", async (req, res, next) => {
     try {
         if (!req.currentUser) {
@@ -12,7 +13,7 @@ router.get("/profile", async (req, res, next) => {
             })
         }
 
-        // Is user ki posts count karein
+        
         const postCount = await PostModel.countDocuments({ authorId: req.currentUser._id });
 
         const userData = req.currentUser._doc ? req.currentUser._doc : req.currentUser;
@@ -32,6 +33,42 @@ router.get("/profile", async (req, res, next) => {
         })
     }
 })
+
+
+router.get("/user/:userId", async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+
+      
+        const user = await UserModel.findById(userId).select("-password");
+
+        if (!user) {
+            return res.status(404).send({
+                message: "user not found"
+            });
+        }
+
+        // Is specific user ki posts count karein
+        const postCount = await PostModel.countDocuments({ authorId: userId });
+
+        const userData = user._doc ? user._doc : user.toObject();
+
+        return res.send({
+            message: "user profile fetched",
+            data: {
+                ...userData,
+                postCount: postCount
+            }
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message: "internal server error"
+        });
+    }
+})
+
 
 // update profile
 router.put("/profile", async (req, res, next) => {
@@ -74,6 +111,7 @@ router.put("/profile", async (req, res, next) => {
 })
 
 
+// update password
 router.put("/password", async (req, res, next) => {
     try {
         if (!req.currentUser) {

@@ -45,11 +45,13 @@ router.post("/post", async (req, res, next) => {
     }
 })
 
-// 2. GET ALL POSTS
+// GET ALL POSTS
 router.get("/post", async (req, res, next) => {
     try {
-        // 👇 Yahan .populate("authorId") add karna zaroori hai
-        const allPost = await PostModel.find().populate("authorId", "firstName lastName firstname lastname profilePicture")
+        
+        const allPost = await PostModel.find()
+            .sort({ _id: -1 }) 
+            .populate("authorId", "firstName lastName firstname lastname profilePicture")
 
         return res.send({
             message: "all posts fetched",
