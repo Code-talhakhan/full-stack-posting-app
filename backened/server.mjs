@@ -20,13 +20,11 @@ app.get("/", (req,res) =>{
      res.send("hello world")
 })
 
-app.use("/api/v1", authRoutes)
-app.use("/api/v1", authGuardJWT)
-app.use("/api/v1", postRoutes)
-app.use("/api/v1", profileRoutes)
-
-
-
+app.use("/api/v1",
+    authRoutes,
+    authGuardJWT,
+    postRoutes,
+    profileRoutes)
 
 
 app.listen(PORT, () => {
