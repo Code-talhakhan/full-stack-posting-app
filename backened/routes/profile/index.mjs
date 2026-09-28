@@ -1,6 +1,7 @@
 import express from "express"
 import { UserModel, PostModel } from "../../models/index.mjs" 
 import bcrypt from "bcryptjs"
+import { multerMiddleware } from "../../libs/multer.mjs"
 
 const router = express.Router()
 
@@ -147,6 +148,28 @@ router.put("/password", async (req, res, next) => {
         return res.status(500).send({
             message: "internal server error"
         })
+    }
+})
+
+// update profile-pic
+
+router.put("/profile-picture", multerMiddleware.any(), async (req, res, next) =>{
+    try {
+        console.log("req.files==>", req.files)
+
+
+        return res.send({
+            message: "profile picture updated",
+        })
+
+        
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message: "internal server error"
+        })
+
+        
     }
 })
 
