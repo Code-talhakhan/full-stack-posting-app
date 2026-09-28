@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { ArrowLeft, Camera, X, Save, ShieldCheck, FileText, Calendar } from 'lucide-react'
 import Input from "../component/Input"
-import Button from "../component/Button"
 import Header from "../component/Header"
 
 const toastStyle = {
@@ -24,15 +23,13 @@ const Profile = () => {
   const [viewUser, setViewUser] = useState(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
 
-  // 👇 FOOLPROOF ID EXTRACTION: Login ya reload, data jahan bhi ho ID nikal aayegi
   const currentUserId = user?.data?.user?._id 
-                     || user?.user?._id 
-                     || user?.data?._id 
-                     || user?._id;
+                      || user?.user?._id 
+                      || user?.data?._id 
+                      || user?._id;
 
   const loggedInUserData = user?.data?.user || user?.user || user?.data || user || {};
 
-  // 👇 String conversion taake type mismatch ka koi chance na rahay
   const isOwnProfile = !userId || String(userId) === String(currentUserId);
 
   useEffect(() => {
@@ -191,7 +188,8 @@ const Profile = () => {
         ...user,
         data: {
           ...loggedInUserData,
-          profilePicture: resp.data.url
+          profilePicture: resp.data.url,
+          profilepicture: resp.data.url // 👇 Local state ko dono case mein update kiya
         }
       })
 
@@ -242,7 +240,8 @@ const Profile = () => {
           <div className="relative w-32 h-32 flex-shrink-0">
             <div className="w-32 h-32 rounded-full p-[3px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]">
               <img
-                src={displayData?.profilePicture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"}
+                // 👇 YAHAN DONO SPELLINGS ADD KAR DIYE HAIN 👇
+                src={displayData?.profilePicture || displayData?.profilepicture || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"}
                 alt="Profile"
                 className="w-full h-full rounded-full object-cover border-2 border-white bg-white"
               />
@@ -255,7 +254,10 @@ const Profile = () => {
                   hidden
                   id="profile-selector"
                   accept="image/*"
-                  onChange={(e) => upload_file(e.target.files[0])}
+                  onChange={(e) => {
+                    upload_file(e.target.files[0])
+                    e.target.value = null // Resets value so same file can be selected again
+                  }}
                 />
                 <label
                   htmlFor="profile-selector"

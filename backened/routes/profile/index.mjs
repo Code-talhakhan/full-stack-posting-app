@@ -2,6 +2,7 @@ import express from "express"
 import { UserModel, PostModel } from "../../models/index.mjs" 
 import bcrypt from "bcryptjs"
 import { multerMiddleware } from "../../libs/multer.mjs"
+import {uploadOnCloudinary} from "../../libs/cloudinary.mjs"
 
 const router = express.Router()
 
@@ -155,21 +156,48 @@ router.put("/password", async (req, res, next) => {
 
 router.put("/profile-picture", multerMiddleware.any(), async (req, res, next) =>{
     try {
-        console.log("req.files==>", req.files)
+        const file = req.files[0]
 
+        if(!file){
+           return res.status(400).send({
+            message: "file is required"
+            })
+        }
+
+        if(!file.mimetype.startsWith("image")){
+            return res.status(400).send({
+                message: "only images are allowed"
+            })
+        }
+
+        if(file.size > 1000000){
+            return res.status(400).send({
+                message: "file upload limit is 1mb"
+            })
+        }
+
+        // upload file on cloudinary
+        // save cloudinary url to database
+        const fileResp = await uploadOnCloudinary(file)
+
+        await UserModel.findByIdAndUpdate({ _id: req.currentUser._id }, {
+            $set: {
+
+                profilepicture: fileResp.secure_url
+                
+            }
+        })
 
         return res.send({
             message: "profile picture updated",
+            url: fileResp.secure_url
         })
 
-        
     } catch (error) {
         console.error(error);
         return res.status(500).send({
             message: "internal server error"
         })
-
-        
     }
 })
 

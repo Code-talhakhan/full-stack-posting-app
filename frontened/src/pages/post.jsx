@@ -26,7 +26,6 @@ const Post = () => {
   const [editDescription, set_editDescription] = useState("")
   const [saving, set_saving] = useState(false)
 
-  // 👇 Logged-in user ki ID safely extract kar li
   const robustUser = user?.data?.user || user?.user || user?.data || user || {};
   const currentUserId = robustUser?._id || robustUser?.id;
 
@@ -37,7 +36,11 @@ const Post = () => {
   const getAllPosts = async () => {
     try {
       set_loading(true)
-      const resp = await axios.get(API_URL)
+      const token = localStorage.getItem("token") 
+
+      const resp = await axios.get(API_URL, {
+        headers: { token: token } 
+      })
       set_posts(resp.data.data || [])
     } catch (error) {
       console.error("Error fetching posts:", error)
@@ -64,7 +67,12 @@ const Post = () => {
     if (!deleteTarget) return
     try {
       set_deleting(true)
-      await axios.delete(`${API_URL}/${deleteTarget}`)
+      const token = localStorage.getItem("token") 
+
+      await axios.delete(`${API_URL}/${deleteTarget}`, {
+        headers: { token: token } 
+      })
+      
       toast.success("Post deleted", {
         style: {
           background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
@@ -73,7 +81,7 @@ const Post = () => {
         },
       })
       set_deleteTarget(null)
-      getAllPosts()
+      getAllPosts() 
     } catch (error) {
       console.error("Error deleting post:", error)
       toast.error("Failed to delete post")
@@ -109,10 +117,15 @@ const Post = () => {
 
     try {
       set_saving(true)
+      const token = localStorage.getItem("token") 
+
       await axios.put(`${API_URL}/${editTarget}`, {
         title: editTitle,
         description: editDescription
+      }, {
+        headers: { token: token } 
       })
+      
       toast.success("Post updated", {
         style: {
           background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
@@ -121,7 +134,7 @@ const Post = () => {
         },
       })
       closeEditModal()
-      getAllPosts()
+      getAllPosts() 
     } catch (error) {
       console.error("Error updating post:", error)
       toast.error("Failed to update post")
@@ -174,15 +187,18 @@ const Post = () => {
                   
                   const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
                   
-                  // 👇 Post ke author ki ID nikali
                   const postAuthorId = postAuthor?._id || postAuthor?.id;
                   
-                  // 👇 Check kiya ke post banane wala main hi hoon ya koi aur
                   const isMyPost = currentUserId && postAuthorId && String(currentUserId) === String(postAuthorId);
 
-                  const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || robustUser?.firstname || robustUser?.firstName || robustUser?.name || "User"
-                  const lastName = postAuthor?.lastname || postAuthor?.lastName || robustUser?.lastname || robustUser?.lastName || ""
-                  const profilePic = postAuthor?.profilePicture || robustUser?.profilePicture || DEFAULT_AVATAR
+                  const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || "User"
+                  const lastName = postAuthor?.lastname || postAuthor?.lastName || ""
+                  
+                  // 👇 FIX: Agar author ki pic na ho aur ye meri apni post hai, toh robustUser wali pic utha lo! 👇
+                  const profilePic = postAuthor?.profilePicture 
+                                  || postAuthor?.profilepicture 
+                                  || (isMyPost ? (robustUser?.profilePicture || robustUser?.profilepicture) : null) 
+                                  || DEFAULT_AVATAR
 
                   return (
                     <motion.div
@@ -217,7 +233,6 @@ const Post = () => {
                           </div>
                         </Link>
 
-                        {/* 👇 Agar ye meri post hai (isMyPost), tabhi yeh 3 dots show honge 👇 */}
                         {isMyPost && (
                           <div className="relative z-10">
                             <button
@@ -267,7 +282,6 @@ const Post = () => {
                             </AnimatePresence>
                           </div>
                         )}
-                        {/* 👆 isMyPost condition ends here 👆 */}
                       </div>
 
                       <div className="pl-1">

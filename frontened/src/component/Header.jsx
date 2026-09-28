@@ -141,7 +141,8 @@ const Header = () => {
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <img 
-                src={userData?.profilePicture || DEFAULT_AVATAR} 
+                // 👇 YAHAN DONO SPELLINGS ADD KAR DIYE HAIN (profilePicture & profilepicture) 👇
+                src={userData?.profilePicture || userData?.profilepicture || DEFAULT_AVATAR} 
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover border border-white"
               />
