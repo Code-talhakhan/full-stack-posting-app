@@ -7,7 +7,6 @@ const router = express.Router()
 // 1. CREATE POST
 router.post("/post", async (req, res, next) => {
     try {
-        // 👇 Sab se pehle check karein ke user login hai ya nahi
         if (!req.currentUser) {
             return res.status(401).send({
                 message: "unauthorized: please login first"
@@ -26,11 +25,10 @@ router.post("/post", async (req, res, next) => {
             })
         }
 
-        // 👇 Post create karte waqt authorId attach kar di hai
         await PostModel.create({
             title: req.body.title,
             description: req.body.description,
-            authorId: req.currentUser._id // 👈 Ye user ki ID database mein save karwayega
+            authorId: req.currentUser._id 
         })
 
         return res.send({
@@ -48,10 +46,10 @@ router.post("/post", async (req, res, next) => {
 // GET ALL POSTS
 router.get("/post", async (req, res, next) => {
     try {
-        
         const allPost = await PostModel.find()
             .sort({ _id: -1 }) 
-            .populate("authorId", "firstName lastName firstname lastname profilePicture")
+            // 👇 YAHAN "profilepicture" ADD KAR DIYA HAI TAAKE DOSRE USERS KI PIC BHI AAYE
+            .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
 
         return res.send({
             message: "all posts fetched",
@@ -65,6 +63,7 @@ router.get("/post", async (req, res, next) => {
         })
     }
 })
+
 // 3. GET SINGLE POST BY ID
 router.get("/post/:postId", async (req, res, next) => {
     try {

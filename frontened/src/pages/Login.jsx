@@ -79,23 +79,31 @@ const Login = () => {
         password: password,
       })
 
-     toast("Login Successful!", {
-  icon: <CheckCircle2 size={20} className="text-white" />,
-  duration: 1500, 
-  style: {
-    background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-    color: '#ffffff',
-    border: 'none',
-  },
-})
+      toast("Login Successful!", {
+        icon: <CheckCircle2 size={20} className="text-white" />,
+        duration: 1500, 
+        style: {
+          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
+          color: '#ffffff',
+          border: 'none',
+        },
+      })
 
-      // Token save aur global state update
       if (resp?.data?.data?.token) {
-        localStorage.setItem("token", resp.data.data.token)
-        global_login(resp.data.data) 
+        const token = resp.data.data.token;
+        localStorage.setItem("token", token)
+        
+        // 👇 LOGIN KE FORAN BAAD PROFILE FETCH KAREIN TAAKE STATE 100% FRESH HO JAYE
+        try {
+          const profileResp = await axios.get(`${baseUrl}/api/v1/profile`, {
+            headers: { token: token }
+          });
+          global_login(profileResp.data);
+        } catch (err) {
+          global_login(resp.data.data); // Fallback agar profile call fail ho
+        }
       }
 
-      
       navigate("/")
 
     } catch (error) {

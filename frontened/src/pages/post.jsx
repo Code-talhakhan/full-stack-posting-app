@@ -26,8 +26,9 @@ const Post = () => {
   const [editDescription, set_editDescription] = useState("")
   const [saving, set_saving] = useState(false)
 
+ 
   const robustUser = user?.data?.user || user?.user || user?.data || user || {};
-  const currentUserId = robustUser?._id || robustUser?.id;
+  const currentUserId = String(robustUser?._id || robustUser?.id || "");
 
   useEffect(() => {
     getAllPosts()
@@ -187,14 +188,15 @@ const Post = () => {
                   
                   const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
                   
-                  const postAuthorId = postAuthor?._id || postAuthor?.id;
+                  // 👇 Author ki ID ko string mein convert kiya taake comparison 100% theek ho
+                  const postAuthorId = String(postAuthor?._id || postAuthor?.id || (typeof postAuthor === 'string' ? postAuthor : ""));
                   
-                  const isMyPost = currentUserId && postAuthorId && String(currentUserId) === String(postAuthorId);
+                  const isMyPost = currentUserId && postAuthorId && currentUserId === postAuthorId;
 
                   const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || "User"
                   const lastName = postAuthor?.lastname || postAuthor?.lastName || ""
                   
-                  // 👇 FIX: Agar author ki pic na ho aur ye meri apni post hai, toh robustUser wali pic utha lo! 👇
+                 
                   const profilePic = postAuthor?.profilePicture 
                                   || postAuthor?.profilepicture 
                                   || (isMyPost ? (robustUser?.profilePicture || robustUser?.profilepicture) : null) 
