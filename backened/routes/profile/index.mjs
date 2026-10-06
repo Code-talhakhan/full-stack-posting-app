@@ -201,4 +201,35 @@ router.put("/profile-picture", multerMiddleware.any(), async (req, res, next) =>
     }
 })
 
+router.get("/profile/posts/:userId", async (req, res, next) => {
+    try {
+        const skip = req.query.skip || 0
+
+        const allPosts = await PostModel.find({ userId: req.params.userId })
+            .populate("userId")
+            .populate({
+                path: "likes",
+                select: "firstname lastname profilePicture"
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(5)
+
+        const totalPosts = await PostModel.countDocuments({ userId: req.params.userId })
+
+        return res.send({
+            message: "profile posts fetched",
+            data: allPosts,
+            totalPosts: totalPosts,
+        })
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message: "internal server error"
+        })
+    }
+})
+
+
 export default router

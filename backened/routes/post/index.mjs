@@ -5,7 +5,7 @@ import { isValidObjectId } from "mongoose"
 const router = express.Router()
 
 // 1. CREATE POST
-router.post("/post", async (req, res, next) => {
+router.post("/post", async (req, res) => {
     try {
         if (!req.currentUser) {
             return res.status(401).send({
@@ -43,12 +43,11 @@ router.post("/post", async (req, res, next) => {
     }
 })
 
-// GET ALL POSTS
-router.get("/post", async (req, res, next) => {
+// 2. GET ALL POSTS
+router.get("/post", async (req, res) => {
     try {
         const allPost = await PostModel.find()
             .sort({ _id: -1 }) 
-            // 👇 YAHAN "profilepicture" ADD KAR DIYA HAI TAAKE DOSRE USERS KI PIC BHI AAYE
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
 
         return res.send({
@@ -64,24 +63,71 @@ router.get("/post", async (req, res, next) => {
     }
 })
 
-// 3. GET SINGLE POST BY ID
-router.get("/post/:postId", async (req, res, next) => {
+// 3. LIKE / UNLIKE POST TOGGLE
+router.post("/post/:postId/like", async (req, res) => {
     try {
-        const postId = req.params.postId
-
-        if (!postId) {
-            return res.status(400).send({
-                message: "id is required"
+        if (!req.currentUser) {
+            return res.status(401).send({
+                message: "unauthorized: please login first"
             })
         }
 
+        const { postId } = req.params
+        const userId = req.currentUser._id
+
         if (!isValidObjectId(postId)) {
             return res.status(400).send({
-                message: "id is invalid"
+                message: "invalid post id"
+            })
+        }
+
+        const post = await PostModel.findById(postId)
+        if (!post) {
+            return res.status(404).send({
+                message: "post not found"
+            })
+        }
+
+        const hasLiked = post.likes.some(id => id.toString() === userId.toString())
+
+        let updateQuery = {}
+        if (hasLiked) {
+            // Un-like
+            updateQuery = { $pull: { likes: userId } }
+        } else {
+            // Like
+            updateQuery = { $addToSet: { likes: userId } }
+        }
+
+        const updatedPost = await PostModel.findByIdAndUpdate(postId, updateQuery, { new: true })
+
+        return res.send({
+            message: hasLiked ? "post unliked" : "post liked",
+            liked: !hasLiked,
+            likesCount: updatedPost.likes.length
+        })
+
+    } catch (error) {
+        console.error(error)
+        return res.status(500).send({
+            message: "internal server error"
+        })
+    }
+})
+
+// 4. GET SINGLE POST BY ID
+router.get("/post/:postId", async (req, res) => {
+    try {
+        const { postId } = req.params
+
+        if (!postId || !isValidObjectId(postId)) {
+            return res.status(400).send({
+                message: "valid id is required"
             })
         }
 
         const singlePost = await PostModel.findOne({ _id: postId })
+            .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
 
         if (!singlePost) {
             return res.status(404).send({
@@ -102,20 +148,14 @@ router.get("/post/:postId", async (req, res, next) => {
     }
 })
 
-// 4. DELETE POST BY ID
-router.delete("/post/:postId", async (req, res, next) => {
+// 5. DELETE POST BY ID
+router.delete("/post/:postId", async (req, res) => {
     try {
-        const postId = req.params.postId
+        const { postId } = req.params
 
-        if (!postId) {
+        if (!postId || !isValidObjectId(postId)) {
             return res.status(400).send({
-                message: "id is required"
-            })
-        }
-
-        if (!isValidObjectId(postId)) {
-            return res.status(400).send({
-                message: "id is invalid"
+                message: "valid id is required"
             })
         }
 
@@ -139,32 +179,20 @@ router.delete("/post/:postId", async (req, res, next) => {
     }
 })
 
-// 5. UPDATE POST BY ID
-router.put("/post/:postId", async (req, res, next) => {
+// 6. UPDATE POST BY ID
+router.put("/post/:postId", async (req, res) => {
     try {
-        const postId = req.params.postId
+        const { postId } = req.params
 
-        if (!postId) {
+        if (!postId || !isValidObjectId(postId)) {
             return res.status(400).send({
-                message: "id is required"
+                message: "valid id is required"
             })
         }
 
-        if (!isValidObjectId(postId)) {
+        if (!req.body.title || !req.body.description) {
             return res.status(400).send({
-                message: "id is invalid"
-            })
-        }
-
-        if (!req.body.title) {
-            return res.status(400).send({
-                message: "title is required"
-            })
-        }
-
-        if (!req.body.description) {
-            return res.status(400).send({
-                message: "description is required"
+                message: "title and description are required"
             })
         }
 
@@ -197,6 +225,5 @@ router.put("/post/:postId", async (req, res, next) => {
         })
     }
 })
-
 
 export default router

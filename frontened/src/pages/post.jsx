@@ -51,7 +51,7 @@ const Post = () => {
 
   useEffect(() => {
     getAllPosts()
-  }, [])
+  }, [currentUserId])
 
   const getAllPosts = async () => {
     try {
@@ -64,13 +64,14 @@ const Post = () => {
       const fetchedPosts = resp.data.data || []
       set_posts(fetchedPosts)
 
-      // Initialize like states & counts
+      // Sync like state & counts from database
       const initialLikes = {}
       const initialCounts = {}
       fetchedPosts.forEach(post => {
         const pId = post._id || post.id
         const likesArr = post.likes || []
-        initialLikes[pId] = likesArr.includes(currentUserId)
+        
+        initialLikes[pId] = likesArr.some(id => String(id?._id || id) === currentUserId)
         initialCounts[pId] = likesArr.length || 0
       })
       setLikedPosts(initialLikes)
@@ -84,25 +85,38 @@ const Post = () => {
     }
   }
 
-  // Handle Like Toggle
+  // Toggle Like & Dislike Handler
   const handleLike = async (postId) => {
-    const isCurrentlyLiked = likedPosts[postId]
-    const updatedCount = isCurrentlyLiked ? (likeCounts[postId] - 1) : (likeCounts[postId] + 1)
+    if (!currentUserId) {
+      toast.error("Please login first")
+      return
+    }
 
-    // Optimistic UI Update
+    const isCurrentlyLiked = !!likedPosts[postId]
+    const currentCount = likeCounts[postId] || 0
+    const updatedCount = isCurrentlyLiked ? Math.max(0, currentCount - 1) : currentCount + 1
+
+    // Instant Optimistic UI Update
     setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }))
     setLikeCounts(prev => ({ ...prev, [postId]: updatedCount }))
 
     try {
       const token = localStorage.getItem("token")
-      await axios.post(`${API_URL}/${postId}/like`, {}, {
+      const resp = await axios.post(`${API_URL}/${postId}/like`, {}, {
         headers: { token: token }
       })
+
+      // Backend status se synchronization
+      if (resp.data) {
+        setLikedPosts(prev => ({ ...prev, [postId]: resp.data.liked }))
+        setLikeCounts(prev => ({ ...prev, [postId]: resp.data.likesCount }))
+      }
     } catch (error) {
-      // Revert if API fails
+      // Revert back if API fails
       setLikedPosts(prev => ({ ...prev, [postId]: isCurrentlyLiked }))
-      setLikeCounts(prev => ({ ...prev, [postId]: isCurrentlyLiked ? updatedCount + 1 : updatedCount - 1 }))
+      setLikeCounts(prev => ({ ...prev, [postId]: currentCount }))
       console.error("Error toggling like:", error)
+      toast.error("Failed to update like status")
     }
   }
 
@@ -174,13 +188,7 @@ const Post = () => {
         headers: { token: token } 
       })
       
-      toast.success("Post deleted", {
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+      toast.success("Post deleted")
       set_deleteTarget(null)
       getAllPosts() 
     } catch (error) {
@@ -227,13 +235,7 @@ const Post = () => {
         headers: { token: token } 
       })
       
-      toast.success("Post updated", {
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+      toast.success("Post updated")
       closeEditModal()
       getAllPosts() 
     } catch (error) {
@@ -287,7 +289,6 @@ const Post = () => {
                   const postDate = singlePost.updatedAt || singlePost.createdAt
                   
                   const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
-                  
                   const postAuthorId = String(postAuthor?._id || postAuthor?.id || (typeof postAuthor === 'string' ? postAuthor : ""));
                   
                   const isMyPost = currentUserId && postAuthorId && currentUserId === postAuthorId;
@@ -393,20 +394,20 @@ const Post = () => {
                         </p>
                       </div>
 
-                      {/* --- Instagram Style Compact Action Bar --- */}
+                      {/* --- Action Bar --- */}
                       <div className="pt-3 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
                         {/* Like Button */}
                         <button
                           onClick={() => handleLike(postId)}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all cursor-pointer ${
                             likedPosts[postId] 
-                              ? 'text-rose-600 font-semibold' 
-                              : 'hover:text-rose-500'
+                              ? 'text-rose-600 bg-rose-50 font-semibold' 
+                              : 'hover:text-rose-500 hover:bg-gray-50'
                           }`}
                         >
                           <motion.div whileTap={{ scale: 1.3 }}>
                             <Heart 
-                              className={`w-5 h-5 ${likedPosts[postId] ? 'fill-rose-600 text-rose-600' : ''}`} 
+                              className={`w-5 h-5 transition-colors ${likedPosts[postId] ? 'fill-rose-600 text-rose-600' : ''}`} 
                             />
                           </motion.div>
                           <span className="text-xs">{likeCounts[postId] || 0}</span>
@@ -415,10 +416,10 @@ const Post = () => {
                         {/* Comment Button */}
                         <button
                           onClick={() => toggleCommentSection(postId)}
-                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all cursor-pointer ${
                             activeCommentPostId === postId 
-                              ? 'text-[#851D52] font-semibold' 
-                              : 'hover:text-[#851D52]'
+                              ? 'text-[#851D52] bg-[#851D52]/10 font-semibold' 
+                              : 'hover:text-[#851D52] hover:bg-gray-50'
                           }`}
                         >
                           <MessageCircle className="w-5 h-5" />
@@ -428,7 +429,7 @@ const Post = () => {
                         {/* Share Button */}
                         <button
                           onClick={() => handleShare(postId, singlePost.title)}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-gray-900 transition-all cursor-pointer"
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-all cursor-pointer"
                         >
                           <Share2 className="w-5 h-5" />
                         </button>
