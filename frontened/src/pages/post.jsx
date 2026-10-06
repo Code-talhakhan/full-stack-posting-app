@@ -3,7 +3,20 @@ import { Link } from 'react-router-dom'
 import Form from '../component/form'
 import axios from 'axios'
 import moment from "moment"
-import { Edit2, Trash2, Clock, MessageSquareOff, X, AlertTriangle, Save, MoreVertical } from 'lucide-react'
+import { 
+  Edit2, 
+  Trash2, 
+  Clock, 
+  MessageSquareOff, 
+  X, 
+  AlertTriangle, 
+  Save, 
+  MoreVertical,
+  Heart,
+  MessageCircle,
+  Share2,
+  Send
+} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import Header from "../component/Header"
@@ -26,7 +39,13 @@ const Post = () => {
   const [editDescription, set_editDescription] = useState("")
   const [saving, set_saving] = useState(false)
 
- 
+  // Like, Comment, and Share States
+  const [likedPosts, setLikedPosts] = useState({})
+  const [likeCounts, setLikeCounts] = useState({})
+  const [activeCommentPostId, setActiveCommentPostId] = useState(null)
+  const [comments, setComments] = useState({})
+  const [newCommentText, setNewCommentText] = useState({})
+
   const robustUser = user?.data?.user || user?.user || user?.data || user || {};
   const currentUserId = String(robustUser?._id || robustUser?.id || "");
 
@@ -42,12 +61,93 @@ const Post = () => {
       const resp = await axios.get(API_URL, {
         headers: { token: token } 
       })
-      set_posts(resp.data.data || [])
+      const fetchedPosts = resp.data.data || []
+      set_posts(fetchedPosts)
+
+      // Initialize like states & counts
+      const initialLikes = {}
+      const initialCounts = {}
+      fetchedPosts.forEach(post => {
+        const pId = post._id || post.id
+        const likesArr = post.likes || []
+        initialLikes[pId] = likesArr.includes(currentUserId)
+        initialCounts[pId] = likesArr.length || 0
+      })
+      setLikedPosts(initialLikes)
+      setLikeCounts(initialCounts)
+
     } catch (error) {
       console.error("Error fetching posts:", error)
       toast.error("Failed to load posts")
     } finally {
       set_loading(false)
+    }
+  }
+
+  // Handle Like Toggle
+  const handleLike = async (postId) => {
+    const isCurrentlyLiked = likedPosts[postId]
+    const updatedCount = isCurrentlyLiked ? (likeCounts[postId] - 1) : (likeCounts[postId] + 1)
+
+    // Optimistic UI Update
+    setLikedPosts(prev => ({ ...prev, [postId]: !isCurrentlyLiked }))
+    setLikeCounts(prev => ({ ...prev, [postId]: updatedCount }))
+
+    try {
+      const token = localStorage.getItem("token")
+      await axios.post(`${API_URL}/${postId}/like`, {}, {
+        headers: { token: token }
+      })
+    } catch (error) {
+      // Revert if API fails
+      setLikedPosts(prev => ({ ...prev, [postId]: isCurrentlyLiked }))
+      setLikeCounts(prev => ({ ...prev, [postId]: isCurrentlyLiked ? updatedCount + 1 : updatedCount - 1 }))
+      console.error("Error toggling like:", error)
+    }
+  }
+
+  // Toggle Comment Box
+  const toggleCommentSection = (postId) => {
+    setActiveCommentPostId(activeCommentPostId === postId ? null : postId)
+  }
+
+  // Add Comment
+  const handleAddComment = (postId) => {
+    const commentText = newCommentText[postId]?.trim()
+    if (!commentText) return
+
+    const newCommentObj = {
+      id: Date.now(),
+      text: commentText,
+      authorName: `${robustUser?.firstname || robustUser?.firstName || 'You'}`,
+      authorPic: robustUser?.profilePicture || DEFAULT_AVATAR,
+      createdAt: new Date()
+    }
+
+    setComments(prev => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), newCommentObj]
+    }))
+
+    setNewCommentText(prev => ({ ...prev, [postId]: "" }))
+    toast.success("Comment added")
+  }
+
+  // Share Post
+  const handleShare = async (postId, title) => {
+    const shareUrl = `${window.location.origin}/post/${postId}`
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title || 'Check out this post',
+          url: shareUrl,
+        })
+      } catch (err) {
+        console.log("Share canceled", err)
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+      toast.success("Post link copied to clipboard!")
     }
   }
 
@@ -188,7 +288,6 @@ const Post = () => {
                   
                   const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
                   
-                  // 👇 Author ki ID ko string mein convert kiya taake comparison 100% theek ho
                   const postAuthorId = String(postAuthor?._id || postAuthor?.id || (typeof postAuthor === 'string' ? postAuthor : ""));
                   
                   const isMyPost = currentUserId && postAuthorId && currentUserId === postAuthorId;
@@ -196,11 +295,12 @@ const Post = () => {
                   const firstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || "User"
                   const lastName = postAuthor?.lastname || postAuthor?.lastName || ""
                   
-                 
                   const profilePic = postAuthor?.profilePicture 
                                   || postAuthor?.profilepicture 
                                   || (isMyPost ? (robustUser?.profilePicture || robustUser?.profilepicture) : null) 
                                   || DEFAULT_AVATAR
+
+                  const postComments = comments[postId] || []
 
                   return (
                     <motion.div
@@ -286,12 +386,106 @@ const Post = () => {
                         )}
                       </div>
 
-                      <div className="pl-1">
+                      <div className="pl-1 mb-4">
                         <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{singlePost.title}</h4>
                         <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words">
                           {singlePost.description}
                         </p>
                       </div>
+
+                      {/* --- Instagram Style Compact Action Bar --- */}
+                      <div className="pt-3 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
+                        {/* Like Button */}
+                        <button
+                          onClick={() => handleLike(postId)}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all cursor-pointer ${
+                            likedPosts[postId] 
+                              ? 'text-rose-600 font-semibold' 
+                              : 'hover:text-rose-500'
+                          }`}
+                        >
+                          <motion.div whileTap={{ scale: 1.3 }}>
+                            <Heart 
+                              className={`w-5 h-5 ${likedPosts[postId] ? 'fill-rose-600 text-rose-600' : ''}`} 
+                            />
+                          </motion.div>
+                          <span className="text-xs">{likeCounts[postId] || 0}</span>
+                        </button>
+
+                        {/* Comment Button */}
+                        <button
+                          onClick={() => toggleCommentSection(postId)}
+                          className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all cursor-pointer ${
+                            activeCommentPostId === postId 
+                              ? 'text-[#851D52] font-semibold' 
+                              : 'hover:text-[#851D52]'
+                          }`}
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                          <span className="text-xs">{postComments.length}</span>
+                        </button>
+
+                        {/* Share Button */}
+                        <button
+                          onClick={() => handleShare(postId, singlePost.title)}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-full hover:text-gray-900 transition-all cursor-pointer"
+                        >
+                          <Share2 className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* --- Comments Section --- */}
+                      <AnimatePresence>
+                        {activeCommentPostId === postId && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="mt-4 pt-4 border-t border-gray-100 overflow-hidden"
+                          >
+                            <div className="flex gap-2 mb-4">
+                              <input
+                                type="text"
+                                placeholder="Write a comment..."
+                                value={newCommentText[postId] || ""}
+                                onChange={(e) => setNewCommentText(prev => ({ ...prev, [postId]: e.target.value }))}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddComment(postId)}
+                                className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#851D52]/40"
+                              />
+                              <button
+                                onClick={() => handleAddComment(postId)}
+                                className="p-2.5 bg-gradient-to-r from-[#4a0d33] to-[#851D52] text-white rounded-xl hover:opacity-90 transition-opacity cursor-pointer flex items-center justify-center"
+                              >
+                                <Send className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                              {postComments.length > 0 ? (
+                                postComments.map((comment) => (
+                                  <div key={comment.id} className="flex gap-3 items-start bg-gray-50/70 p-3 rounded-2xl">
+                                    <img 
+                                      src={comment.authorPic} 
+                                      alt="Commenter" 
+                                      className="w-7 h-7 rounded-full object-cover mt-0.5"
+                                    />
+                                    <div className="flex-1 text-xs">
+                                      <div className="flex items-center justify-between mb-0.5">
+                                        <span className="font-bold text-gray-800">{comment.authorName}</span>
+                                        <span className="text-[10px] text-gray-400">{moment(comment.createdAt).fromNow()}</span>
+                                      </div>
+                                      <p className="text-gray-600 text-sm">{comment.text}</p>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-xs text-center text-gray-400 py-2">No comments yet. Start the conversation!</p>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </motion.div>
                   )
                 })
@@ -313,6 +507,7 @@ const Post = () => {
         )}
       </main>
 
+      {/* Delete Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <motion.div
@@ -359,6 +554,7 @@ const Post = () => {
         )}
       </AnimatePresence>
 
+      {/* Edit Modal */}
       <AnimatePresence>
         {editTarget && (
           <motion.div
