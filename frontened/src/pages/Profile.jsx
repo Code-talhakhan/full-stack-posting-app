@@ -498,8 +498,16 @@ const Profile = () => {
         </motion.div>
 
         {/* Wider Light Divider Line */}
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center mb-8">
           <div className="w-[96%] border-t border-gray-200/70"></div>
+        </div>
+
+        {/* Posts Heading with Vertical Gradient Bar */}
+        <div className="flex items-center gap-2.5 mb-6 px-1">
+          <div className="h-7 w-2 bg-gradient-to-b from-[#4a0d33] via-[#851D52] to-[#e87163] rounded-full"></div>
+          <h3 className="text-2xl font-bold text-gray-900 tracking-tight capitalize">
+            {isOwnProfile ? "Your Posts" : `${defaultFirstName}'s Posts`}
+          </h3>
         </div>
 
         {/* Render User Posts */}
@@ -684,7 +692,7 @@ const Profile = () => {
                   )
                 })
               ) : (
-                /* Empty State with text-gray-500 for Description matching Member Since */
+                /* Empty State */
                 <div className="py-12 text-center flex flex-col items-center justify-center">
                   <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
                     <Camera className="w-10 h-10" strokeWidth={1.75} />
