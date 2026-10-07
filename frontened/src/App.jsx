@@ -68,7 +68,7 @@ const App = () => {
       <Toaster position="top-right" richColors />
 
       <Routes>
-        {/* PUBLIC ROUTE: Koi bhi shared post details dekh sakta hai */}
+        {/* SHARED PUBLIC/LOGGED IN ROUTE: Single post page route har case me open hona chahiye */}
         <Route path="/post/:postId" element={<SinglePostPage />} />
 
         {/* LOGGED OUT USERS */}
