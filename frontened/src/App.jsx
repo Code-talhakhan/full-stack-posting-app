@@ -6,12 +6,11 @@ import Posts from "./pages/post"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import Profile from "./pages/Profile"
-import NotFound from './pages/NotFound'
+import SinglePostPage from "./pages/SinglePostPage.jsx"
 import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
 import SplashScreen from "./component/SplashScreen"
-import { AnimatePresence } from 'framer-motion'
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -23,9 +22,8 @@ axios.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
-
 const App = () => {
-  const { global_login, global_logout, user, isLogin } = store()
+  const { global_login, global_logout, isLogin } = store()
 
   useEffect(() => {
     get_profile()
@@ -38,7 +36,7 @@ const App = () => {
       if (!token) {
         setTimeout(() => {
           global_logout();
-        }, 2000); 
+        }, 1500); 
         return;
       }
 
@@ -61,39 +59,37 @@ const App = () => {
     }
   };
 
+  if (isLogin === null) {
+    return <SplashScreen />
+  }
 
   return (
     <>
       <Toaster position="top-right" richColors />
 
-       {isLogin == null ? <SplashScreen /> : null}
+      <Routes>
+        {/* PUBLIC ROUTE: Koi bhi shared post details dekh sakta hai */}
+        <Route path="/post/:postId" element={<SinglePostPage />} />
 
-      {
-        isLogin == true ?
-          <Routes>
-            <Route path='/' element={<Posts />} />
-            
-           
-            <Route path='/profile' element={<Profile />} /> 
-            
-            
-            <Route path='/profile/:userId' element={<Profile />} /> 
-            
-            <Route path='/chat' element={<chat />} />
-            <Route path='*' element={<Navigate to="/" />} />
-          </Routes> :
-          null
-      }
+        {/* LOGGED OUT USERS */}
+        {isLogin === false && (
+          <>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </>
+        )}
 
-      {
-        isLogin == false ?
-          <Routes>
-            <Route path='/login' element={<Login />} />
-            <Route path='/signup' element={<Signup />} />
-            <Route path='*' element={<Navigate to="/login" />} />
-          </Routes> :
-          null
-      }
+        {/* LOGGED IN USERS */}
+        {isLogin === true && (
+          <>
+            <Route path="/" element={<Posts />} />
+            <Route path="/profile" element={<Profile />} /> 
+            <Route path="/profile/:userId" element={<Profile />} /> 
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </>
+        )}
+      </Routes>
     </>
   )
 }
