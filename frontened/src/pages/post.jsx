@@ -370,16 +370,16 @@ const Post = () => {
                         </p>
 
                         {/* Optimized Compact Image Container */}
-                        {postImage && (
-                          <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[380px] sm:max-h-[400px]">
-                            <img 
-                              src={postImage} 
-                              alt="Post Media" 
-                              className="w-full h-full max-h-[380px] sm:max-h-[400px] object-contain hover:scale-[1.01] transition-transform duration-300"
-                              loading="lazy"
-                            />
-                          </div>
-                        )}
+                       {postImage && (
+  <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
+    <img 
+      src={postImage} 
+      alt="Post Media" 
+      className="w-full max-h-[450px] object-cover rounded-[16px] hover:scale-[1.01] transition-transform duration-300"
+      loading="lazy"
+    />
+  </div>
+)}
                       </div>
 
                       {/* Action Buttons Bar */}

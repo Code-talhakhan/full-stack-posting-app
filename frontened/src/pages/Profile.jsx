@@ -145,7 +145,7 @@ const Profile = () => {
   // Modal States
   const [editOpen, set_editOpen] = useState(false)
   const [securityOpen, set_securityOpen] = useState(false)
-  
+
   const [editFirstname, set_editFirstname] = useState("")
   const [editLastname, set_editLastname] = useState("")
   const [savingName, set_savingName] = useState(false)
@@ -368,7 +368,7 @@ const Profile = () => {
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
       <Header />
 
-      <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+      <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -382,14 +382,13 @@ const Profile = () => {
           </h2>
         </div>
 
-        {/* Profile Card */}
+        {/* Profile Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-6"
         >
           <div className="relative w-32 h-32 flex-shrink-0">
-            {/* Borderless Profile Header Picture */}
             <img
               src={displayData?.profilePicture || displayData?.profilepicture || DEFAULT_AVATAR}
               alt="Profile"
@@ -502,6 +501,11 @@ const Profile = () => {
                   const postDate = singlePost.updatedAt || singlePost.createdAt
                   const commentCount = singlePost?.comments?.length || 0
 
+                  const postImage = singlePost?.imageUrl 
+                                 || singlePost?.image 
+                                 || (typeof singlePost?.files === 'string' ? singlePost?.files : singlePost?.files?.[0]) 
+                                 || null;
+
                   return (
                     <motion.div
                       layout
@@ -512,9 +516,9 @@ const Profile = () => {
                       key={postId}
                       className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative"
                     >
-                      <div className="flex justify-between items-start mb-4">
+                      {/* Card Header */}
+                      <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
-                          {/* Borderless User Post Picture */}
                           <img 
                             src={displayData?.profilePicture || displayData?.profilepicture || DEFAULT_AVATAR} 
                             alt="User" 
@@ -578,13 +582,35 @@ const Profile = () => {
                         )}
                       </div>
 
-                      <div className="pl-1 mb-4">
-                        <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{singlePost.title}</h4>
-                        <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words">
-                          {singlePost.description}
-                        </p>
+                      {/* Clickable Content Wrapper */}
+                      <div 
+                        onClick={() => navigate(`/post/${postId}`)}
+                        className="cursor-pointer group"
+                      >
+                        {/* Content Section */}
+                        <div className="mb-3">
+                          <h4 className="font-bold text-gray-900 text-[17px] mb-1 group-hover:text-[#851D52] transition-colors">
+                            {singlePost.title}
+                          </h4>
+                          <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words">
+                            {singlePost.description}
+                          </p>
+                        </div>
+
+                        {/* Clean Image Frame Matching Post.jsx */}
+                        {postImage && (
+                          <div className="w-full rounded-[18px] overflow-hidden border border-gray-100 bg-black/5 my-3">
+                            <img 
+                              src={postImage} 
+                              alt="Post Attachment" 
+                              className="w-full max-h-[460px] object-cover rounded-[18px] group-hover:scale-[1.005] transition-transform duration-300"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
                       </div>
 
+                      {/* Action Bar */}
                       <div className="pt-3 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
                         <button
                           onClick={() => handleLike(postId)}
@@ -632,7 +658,7 @@ const Profile = () => {
         )}
       </main>
 
-      {/* --- REUSABLE COMMENT MODAL --- */}
+      {/* REUSABLE COMMENT MODAL */}
       <CommentModal
         selectedPost={selectedPostModal}
         onClose={() => setSelectedPostModal(null)}
