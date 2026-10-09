@@ -124,7 +124,8 @@ const SinglePostPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F4F7FB]">
-        <Header />
+        {/* Pass hideSearch prop */}
+        <Header hideSearch={true} />
         <div className="max-w-4xl mx-auto px-4 pt-12 flex justify-center">
           <div className="w-10 h-10 border-4 border-[#851D52] border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -135,7 +136,8 @@ const SinglePostPage = () => {
   if (notFound || !post) {
     return (
       <div className="min-h-screen bg-[#F4F7FB] font-sans flex flex-col">
-        <Header />
+        {/* Pass hideSearch prop */}
+        <Header hideSearch={true} />
         <main className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
             <MessageSquareOff size={36} />
@@ -166,7 +168,8 @@ const SinglePostPage = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
-      <Header />
+      {/* Search bar is hidden here */}
+      <Header hideSearch={true} />
 
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
         <button

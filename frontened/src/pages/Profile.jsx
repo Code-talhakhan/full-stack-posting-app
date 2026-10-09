@@ -356,7 +356,8 @@ const Profile = () => {
   if (loadingProfile && !viewUser) {
     return (
       <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20 flex flex-col">
-        <Header />
+        {/* Search bar hidden during loading */}
+        <Header hideSearch={true} />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-[#851D52] border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -366,7 +367,8 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
-      <Header />
+      {/* Search bar explicitly hidden on Profile Page */}
+      <Header hideSearch={true} />
 
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
         <div className="flex items-center gap-3 mb-8">

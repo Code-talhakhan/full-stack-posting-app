@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Form from '../component/form'
 import axios from 'axios'
 import moment from "moment"
@@ -26,8 +26,12 @@ const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7
 
 const Post = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const searchQuery = searchParams.get('q') || ''
+
   const { user } = store()
   const [posts, set_posts] = useState([])
+  const [filteredPosts, setFilteredPosts] = useState([])
   const [loading, set_loading] = useState(true)
   const [activeDropdown, setActiveDropdown] = useState(null)
 
@@ -50,6 +54,21 @@ const Post = () => {
     getAllPosts()
   }, [currentUserId])
 
+  // Search Filter Logic (Without Banner)
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      const filtered = posts.filter(post => {
+        const titleMatch = post?.title?.toLowerCase().includes(query)
+        const descMatch = post?.description?.toLowerCase().includes(query)
+        return titleMatch || descMatch
+      })
+      setFilteredPosts(filtered)
+    } else {
+      setFilteredPosts(posts)
+    }
+  }, [searchQuery, posts])
+
   const getAuthHeaders = () => {
     const rawToken = localStorage.getItem("token") || ""
     const cleanToken = rawToken.replace(/^Bearer\s+/i, "").trim()
@@ -67,6 +86,7 @@ const Post = () => {
       })
       const fetchedPosts = resp.data.data || []
       set_posts(fetchedPosts)
+      setFilteredPosts(fetchedPosts)
 
       if (selectedPostModal) {
         const updatedTarget = fetchedPosts.find(p => (p._id || p.id) === (selectedPostModal._id || selectedPostModal.id))
@@ -224,7 +244,6 @@ const Post = () => {
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
       <Header />
 
-      {/* Main Container width updated from max-w-4xl to max-w-2xl */}
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
         <Form getAllPosts={getAllPosts} />
 
@@ -254,8 +273,8 @@ const Post = () => {
         ) : (
           <div className="space-y-5">
             <AnimatePresence>
-              {posts.length ? (
-                posts.map((singlePost, index) => {
+              {filteredPosts.length ? (
+                filteredPosts.map((singlePost, index) => {
                   const postId = singlePost._id || singlePost.id
                   const postDate = singlePost.updatedAt || singlePost.createdAt
                   
@@ -370,16 +389,16 @@ const Post = () => {
                         </p>
 
                         {/* Optimized Compact Image Container */}
-                       {postImage && (
-  <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
-    <img 
-      src={postImage} 
-      alt="Post Media" 
-      className="w-full max-h-[450px] object-cover rounded-[16px] hover:scale-[1.01] transition-transform duration-300"
-      loading="lazy"
-    />
-  </div>
-)}
+                        {postImage && (
+                          <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
+                            <img 
+                              src={postImage} 
+                              alt="Post Media" 
+                              className="w-full max-h-[450px] object-cover rounded-[16px] hover:scale-[1.01] transition-transform duration-300"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons Bar */}
@@ -417,8 +436,12 @@ const Post = () => {
                   <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center">
                     <MessageSquareOff className="w-10 h-10 text-[#851D52]/50" />
                   </div>
-                  <p className="text-gray-600 font-semibold text-lg">No posts on your feed</p>
-                  <p className="text-gray-400 text-sm mt-1">Be the first one to share something!</p>
+                  <p className="text-gray-600 font-semibold text-lg">
+                    {searchQuery ? `No posts found for "${searchQuery}"` : "No posts on your feed"}
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {searchQuery ? "Try searching with different keywords" : "Be the first one to share something!"}
+                  </p>
                 </div>
               )}
             </AnimatePresence>
