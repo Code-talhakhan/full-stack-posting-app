@@ -131,20 +131,19 @@ const Header = () => {
 
           <div className="flex items-center gap-3 relative">
             
-            {/* Direct Image instead of SVG */}
+            {/* Borderless Avatar Button */}
             <button 
               onClick={() => {
                 setIsDropdownOpen(!isDropdownOpen)
                 setIsMobileMenuOpen(false)
               }}
-              className="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] shadow-md hover:opacity-90 transition-all active:scale-95 z-50 border-none outline-none ring-0 select-none cursor-pointer"
+              className="w-10 h-10 rounded-full hover:opacity-90 transition-all active:scale-95 z-50 border-none outline-none ring-0 select-none cursor-pointer overflow-hidden"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
               <img 
-                // 👇 YAHAN DONO SPELLINGS ADD KAR DIYE HAIN (profilePicture & profilepicture) 👇
                 src={userData?.profilePicture || userData?.profilepicture || DEFAULT_AVATAR} 
                 alt="Profile" 
-                className="w-full h-full rounded-full object-cover border border-white"
+                className="w-full h-full rounded-full object-cover"
               />
             </button>
 

@@ -21,6 +21,12 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
   const authorPic = postAuthor?.profilePicture || postAuthor?.profilepicture || DEFAULT_AVATAR
   const commentsList = selectedPost?.comments || []
 
+  // Extract Image URL with fallbacks
+  const postImage = selectedPost?.imageUrl 
+                 || selectedPost?.image 
+                 || (typeof selectedPost?.files === 'string' ? selectedPost?.files : selectedPost?.files?.[0]) 
+                 || null;
+
   // Add Comment API Call
   const handleAddComment = async () => {
     if (!modalCommentText.trim()) return
@@ -84,7 +90,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-4xl h-[80vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
+          className="w-full max-w-4xl h-[85vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
         >
           {/* Close Button */}
           <button
@@ -94,15 +100,17 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             <X size={18} />
           </button>
 
-          {/* LEFT SIDE: Burgundy Gradient Box */}
-          <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 sm:p-7 flex-col justify-between overflow-y-auto text-white">
-            <div>
-              <div className="flex items-center gap-3.5 mb-5">
-                {/* Border-less Profile Picture */}
+          {/* LEFT SIDE: Burgundy Gradient Panel (Fixed Layout - No Panel Shift) */}
+          <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
+            
+            {/* Middle Scrollable Section (Sirf Post Content Scroll Hoga) */}
+            <div className="flex-1 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {/* Author Info */}
+              <div className="flex items-center gap-3 mb-4">
                 <img 
                   src={authorPic} 
                   alt="Author" 
-                  className="w-11 h-11 rounded-full object-cover flex-shrink-0" 
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/20 shadow-sm" 
                 />
                 <div>
                   <h4 className="font-bold text-white text-sm capitalize tracking-wide">{authorName}</h4>
@@ -110,17 +118,29 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                 </div>
               </div>
 
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-3 leading-snug tracking-tight">{selectedPost?.title}</h2>
-              <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal">{selectedPost?.description}</p>
+              {/* Title & Description */}
+              <h2 className="text-lg font-bold text-white mb-2 leading-snug tracking-tight">{selectedPost?.title}</h2>
+              <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal mb-4">{selectedPost?.description}</p>
+
+              {/* Image Frame Container */}
+              {postImage && (
+                <div className="w-full rounded-2xl overflow-hidden border border-white/15 bg-black/20 shadow-inner max-h-[280px] flex items-center justify-center my-2">
+                  <img 
+                    src={postImage} 
+                    alt="Post media" 
+                    className="w-full h-full max-h-[280px] object-cover"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Left Bottom Stats */}
-            <div className="pt-5 border-t border-white/15 mt-5 flex items-center gap-3 text-white text-xs font-medium">
-              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+            {/* Bottom Fixed Stats (Ab bilkul hilay ga nahi) */}
+            <div className="pt-4 border-t border-white/15 mt-3 flex items-center gap-3 text-white text-xs font-medium flex-shrink-0">
+              <div className="flex items-center gap-1.5 bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                 <Heart className={`w-3.5 h-3.5 ${likedPosts?.[postId] ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
                 <span>{likeCounts?.[postId] || 0} Likes</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <div className="flex items-center gap-1.5 bg-white/10 px-3.5 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                 <MessageCircle className="w-3.5 h-3.5 text-white" />
                 <span>{commentsList.length} Comments</span>
               </div>

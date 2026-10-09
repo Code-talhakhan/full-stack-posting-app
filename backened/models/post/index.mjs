@@ -11,12 +11,13 @@ const commentSchema = new mongoose.Schema({
         ref: "users",
         required: true
     },
-    likes: [
-        {
+    likes: {
+        type: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "users"
-        }
-    ]
+        }],
+        default: [] // Ensures likes array is always initialized
+    }
 }, { timestamps: true });
 
 const postSchema = new mongoose.Schema({
@@ -30,18 +31,27 @@ const postSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    imageUrl: {
+        type: String,
+        trim: true,
+        default: null,
+    },
     authorId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "users",
-        required: false 
+        required: true 
     },
-    likes: [
-        {
+    likes: {
+        type: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "users"
-        }
-    ],
-    comments: [commentSchema]
-}, { timestamps: true })
+        }],
+        default: [] 
+    },
+    comments: {
+        type: [commentSchema],
+        default: [] 
+    }
+}, { timestamps: true });
 
-export const PostModel = mongoose.model("posts", postSchema)
+export const PostModel = mongoose.model("posts", postSchema);

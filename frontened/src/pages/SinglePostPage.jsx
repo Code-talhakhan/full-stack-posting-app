@@ -158,6 +158,12 @@ const SinglePostPage = () => {
   const authorPic = postAuthor?.profilePicture || postAuthor?.profilepicture || DEFAULT_AVATAR
   const commentsList = post?.comments || []
 
+  // Extract Post Image with Fallbacks
+  const postImage = post?.imageUrl 
+                 || post?.image 
+                 || (typeof post?.files === 'string' ? post?.files : post?.files?.[0]) 
+                 || null;
+
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
       <Header />
@@ -177,13 +183,14 @@ const SinglePostPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative"
         >
+          {/* Header */}
           <div className="flex justify-between items-start mb-4">
             <Link 
               to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
               className="flex items-center gap-3 group outline-none"
             >
-              <div className="w-11 h-11 rounded-full p-[2px] bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex-shrink-0 shadow-sm group-hover:shadow-md transition-all">
-                <img src={authorPic} alt="User" className="w-full h-full rounded-full object-cover border border-white" />
+              <div className="w-11 h-11 rounded-full flex-shrink-0 shadow-sm group-hover:shadow-md transition-all overflow-hidden">
+                <img src={authorPic} alt="User" className="w-full h-full rounded-full object-cover" />
               </div>
               <div className="flex flex-col">
                 <h4 className="font-bold text-gray-900 text-[15px] capitalize group-hover:text-[#851D52] transition-colors leading-tight">
@@ -197,13 +204,27 @@ const SinglePostPage = () => {
             </Link>
           </div>
 
+          {/* Title, Description & Image Section */}
           <div className="pl-1 mb-4">
             <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{post.title}</h4>
-            <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words">
+            <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words mb-3">
               {post.description}
             </p>
+
+            {/* Post Image Container */}
+            {postImage && (
+              <div className="w-full rounded-[20px] overflow-hidden border border-gray-100 bg-gray-50 shadow-sm my-3 max-h-[420px] flex items-center justify-center">
+                <img 
+                  src={postImage} 
+                  alt="Post Attachment" 
+                  className="w-full h-full max-h-[420px] object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
           </div>
 
+          {/* Action Bar */}
           <div className="pt-3 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
             <button
               onClick={handleLike}
@@ -233,7 +254,6 @@ const SinglePostPage = () => {
         </motion.div>
       </main>
 
-      {/* --- REUSABLE COMMENT MODAL --- */}
       <CommentModal
         selectedPost={selectedPostModal}
         onClose={() => setSelectedPostModal(null)}
@@ -244,7 +264,7 @@ const SinglePostPage = () => {
           setPost(updatedPost)
           setSelectedPostModal(updatedPost)
         }}
-      />
+      /> 
     </div>
   )
 }
