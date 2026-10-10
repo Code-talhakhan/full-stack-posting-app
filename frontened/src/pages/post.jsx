@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Form from '../component/form'
 import axios from 'axios'
@@ -13,7 +13,8 @@ import {
   MoreVertical,
   Heart,
   MessageCircle,
-  Share2
+  Share2,
+  Loader2
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -23,6 +24,7 @@ import { store } from '../store/states'
 
 const API_URL = "http://localhost:3001/api/v1/post"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
+const POSTS_LIMIT = 5
 
 const Post = () => {
   const navigate = useNavigate()
@@ -30,10 +32,16 @@ const Post = () => {
   const searchQuery = searchParams.get('q') || ''
 
   const { user } = store()
-  const [posts, set_posts] = useState([])
+  const [posts, setPosts] = useState([])
   const [filteredPosts, setFilteredPosts] = useState([])
-  const [loading, set_loading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [activeDropdown, setActiveDropdown] = useState(null)
+
+  // Server-Side Pagination & Infinite Scroll States
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
+  const observerTarget = useRef(null)
 
   const [deleteTarget, set_deleteTarget] = useState(null)
   const [deleting, set_deleting] = useState(false)
@@ -50,11 +58,75 @@ const Post = () => {
   const robustUser = user?.data?.user || user?.user || user?.data || user || {};
   const currentUserId = String(robustUser?._id || robustUser?.id || "");
 
+  const getAuthHeaders = () => {
+    const rawToken = localStorage.getItem("token") || ""
+    const cleanToken = rawToken.replace(/^Bearer\s+/i, "").trim()
+    return {
+      token: cleanToken,
+      Authorization: `Bearer ${cleanToken}`
+    }
+  }
+
+  // Fetch posts from server page by page
+  // Fetch posts from server page by page
+  // Fetch posts with guaranteed loader delay
+  const fetchPosts = async (pageNum, isInitial = false) => {
+    try {
+      if (isInitial) setLoading(true)
+      else setIsFetchingMore(true)
+
+      // Minimum delay timer (1000ms = 1 sec)
+      const delayPromise = new Promise(resolve => setTimeout(resolve, 1000));
+
+      // API Call
+      const apiPromise = axios.get(`${API_URL}?page=${pageNum}&limit=${POSTS_LIMIT}`, {
+        headers: getAuthHeaders() 
+      });
+
+      // API Response aur Delay dono ka ek sath wait karein
+      const [resp] = await Promise.all([apiPromise, delayPromise]);
+
+      const fetchedPosts = resp.data.data || []
+      const paginationInfo = resp.data.pagination || {}
+
+      setPosts(prev => isInitial ? fetchedPosts : [...prev, ...fetchedPosts])
+      setHasMore(paginationInfo.hasMore)
+
+      // Map Likes & Like Counts
+      setLikedPosts(prev => {
+        const updated = { ...prev }
+        fetchedPosts.forEach(post => {
+          const pId = post._id || post.id
+          const likesArr = post.likes || []
+          updated[pId] = likesArr.some(id => String(id?._id || id) === currentUserId)
+        })
+        return updated
+      })
+
+      setLikeCounts(prev => {
+        const updated = { ...prev }
+        fetchedPosts.forEach(post => {
+          const pId = post._id || post.id
+          updated[pId] = post.likes?.length || 0
+        })
+        return updated
+      })
+
+    } catch (error) {
+      console.error("Error fetching posts:", error)
+      toast.error("Failed to load posts")
+    } finally {
+      setLoading(false)
+      setIsFetchingMore(false)
+    }
+  }
+  // Initial Posts Load
   useEffect(() => {
-    getAllPosts()
+    setPage(1)
+    fetchPosts(1, true)
   }, [currentUserId])
 
-  // Search Filter Logic (Without Banner)
+  // Search Filter Logic
   useEffect(() => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
@@ -69,49 +141,39 @@ const Post = () => {
     }
   }, [searchQuery, posts])
 
-  const getAuthHeaders = () => {
-    const rawToken = localStorage.getItem("token") || ""
-    const cleanToken = rawToken.replace(/^Bearer\s+/i, "").trim()
-    return {
-      token: cleanToken,
-      Authorization: `Bearer ${cleanToken}`
-    }
-  }
+  // Intersection Observer for Scroll Trigger
+  useEffect(() => {
+    if (loading || isFetchingMore || !hasMore) return
 
-  const getAllPosts = async () => {
-    try {
-      set_loading(true)
-      const resp = await axios.get(API_URL, {
-        headers: getAuthHeaders() 
-      })
-      const fetchedPosts = resp.data.data || []
-      set_posts(fetchedPosts)
-      setFilteredPosts(fetchedPosts)
-
-      if (selectedPostModal) {
-        const updatedTarget = fetchedPosts.find(p => (p._id || p.id) === (selectedPostModal._id || selectedPostModal.id))
-        if (updatedTarget) setSelectedPostModal(updatedTarget)
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          setIsFetchingMore(true)
+          setPage(prevPage => {
+            const nextPage = prevPage + 1
+            fetchPosts(nextPage, false)
+            return nextPage
+          })
+        }
+      },
+      { 
+        root: null, 
+        rootMargin: '150px', 
+        threshold: 0.1 
       }
+    )
 
-      const initialLikes = {}
-      const initialCounts = {}
-      fetchedPosts.forEach(post => {
-        const pId = post._id || post.id
-        const likesArr = post.likes || []
-        
-        initialLikes[pId] = likesArr.some(id => String(id?._id || id) === currentUserId)
-        initialCounts[pId] = likesArr.length || 0
-      })
-      setLikedPosts(initialLikes)
-      setLikeCounts(initialCounts)
-
-    } catch (error) {
-      console.error("Error fetching posts:", error)
-      toast.error("Failed to load posts")
-    } finally {
-      set_loading(false)
+    const currentRef = observerTarget.current
+    if (currentRef) {
+      observer.observe(currentRef)
     }
-  }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef)
+      }
+    }
+  }, [loading, isFetchingMore, hasMore, posts.length])
 
   const handleLike = async (postId) => {
     if (!currentUserId) {
@@ -189,7 +251,7 @@ const Post = () => {
       
       toast.success(resp?.data?.message || "Post deleted")
       set_deleteTarget(null)
-      getAllPosts() 
+      fetchPosts(1, true)
     } catch (error) {
       console.error("Delete Error:", error?.response?.data || error)
       toast.error(error?.response?.data?.message || "Failed to delete post")
@@ -231,7 +293,7 @@ const Post = () => {
       
       toast.success(resp?.data?.message || "Post updated")
       closeEditModal()
-      getAllPosts() 
+      fetchPosts(1, true)
     } catch (error) {
       console.error("Edit Error:", error?.response?.data || error)
       toast.error(error?.response?.data?.message || "Failed to update post")
@@ -245,7 +307,7 @@ const Post = () => {
       <Header />
 
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
-        <Form getAllPosts={getAllPosts} />
+        <Form getAllPosts={() => fetchPosts(1, true)} />
 
         <div className="flex items-center justify-between mb-6 pl-2">
           <div className="flex items-center gap-3">
@@ -305,7 +367,7 @@ const Post = () => {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.25, delay: index * 0.05 }}
+                      transition={{ duration: 0.25, delay: index * 0.03 }}
                       key={postId}
                       className="bg-white p-4 sm:p-5 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative overflow-hidden"
                     >
@@ -388,7 +450,7 @@ const Post = () => {
                           {singlePost.description}
                         </p>
 
-                        {/* Optimized Compact Image Container */}
+                        {/* Image Container */}
                         {postImage && (
                           <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
                             <img 
@@ -445,6 +507,20 @@ const Post = () => {
                 </div>
               )}
             </AnimatePresence>
+
+            {/* SCROLL TARGET LOADER */}
+            <div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
+              {isFetchingMore ? (
+                <div className="flex items-center gap-2.5 bg-white px-5 py-2.5 rounded-full shadow-md border border-gray-100">
+                  <Loader2 className="w-5 h-5 text-[#851D52] animate-spin" />
+                  <span className="text-xs font-semibold text-gray-600">Loading more posts...</span>
+                </div>
+              ) : hasMore ? (
+                <div className="h-6 w-full"></div>
+              ) : posts.length > 5 ? (
+                <p className="text-xs text-gray-400 font-medium">No more posts to load </p>
+              ) : null}
+            </div>
           </div>
         )}
       </main>
@@ -456,10 +532,7 @@ const Post = () => {
         currentUserId={currentUserId}
         likedPosts={likedPosts}
         likeCounts={likeCounts}
-        onPostUpdated={(updatedPost) => {
-          setSelectedPostModal(updatedPost)
-          getAllPosts()
-        }}
+        onPostUpdated={() => fetchPosts(1, true)}
       />
 
       {/* Delete Confirmation Modal */}

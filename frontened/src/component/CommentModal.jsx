@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import moment from 'moment'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,6 +11,7 @@ const API_POST_URL = `${baseUrl}/api/v1/post`
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, likedPosts, likeCounts }) => {
+  const navigate = useNavigate()
   const [modalCommentText, setModalCommentText] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
 
@@ -100,23 +102,27 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             <X size={18} />
           </button>
 
-          {/* LEFT SIDE: Burgundy Gradient Panel (Fixed Layout - No Panel Shift) */}
+          {/* LEFT SIDE: Burgundy Gradient Panel */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
             
-            {/* Middle Scrollable Section (Sirf Post Content Scroll Hoga) */}
+            {/* Middle Scrollable Section */}
             <div className="flex-1 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {/* Author Info */}
-              <div className="flex items-center gap-3 mb-4">
+              <Link 
+                to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
+                onClick={onClose}
+                className="flex items-center gap-3 mb-4 group cursor-pointer w-fit"
+              >
                 <img 
                   src={authorPic} 
                   alt="Author" 
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/20 shadow-sm" 
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/20 shadow-sm group-hover:scale-105 transition-transform" 
                 />
                 <div>
-                  <h4 className="font-bold text-white text-sm capitalize tracking-wide">{authorName}</h4>
+                  <h4 className="font-bold text-white text-sm capitalize tracking-wide group-hover:underline">{authorName}</h4>
                   <p className="text-[11px] text-white/70 font-medium">{moment(selectedPost?.createdAt).fromNow()}</p>
                 </div>
-              </div>
+              </Link>
 
               {/* Title & Description */}
               <h2 className="text-lg font-bold text-white mb-2 leading-snug tracking-tight">{selectedPost?.title}</h2>
@@ -134,7 +140,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               )}
             </div>
 
-            {/* Bottom Fixed Stats (Ab bilkul hilay ga nahi) */}
+            {/* Bottom Fixed Stats */}
             <div className="pt-4 border-t border-white/15 mt-3 flex items-center gap-3 text-white text-xs font-medium flex-shrink-0">
               <div className="flex items-center gap-1.5 bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                 <Heart className={`w-3.5 h-3.5 ${likedPosts?.[postId] ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
@@ -160,6 +166,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               {commentsList.length > 0 ? (
                 commentsList.map((comment) => {
                   const cAuthor = comment?.authorId || {}
+                  const commentAuthorId = cAuthor?._id || cAuthor?.id
                   const commentAuthorName = `${cAuthor?.firstname || cAuthor?.firstName || 'User'} ${cAuthor?.lastname || cAuthor?.lastName || ''}`
                   const commentAuthorPic = cAuthor?.profilePicture || cAuthor?.profilepicture || DEFAULT_AVATAR
                   const cLikes = comment?.likes || []
@@ -167,10 +174,26 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
                   return (
                     <div key={comment._id} className="flex gap-3 items-start bg-white p-3.5 rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                      <img src={commentAuthorPic} alt="Commenter" className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5" />
+                      
+                      {/* Clickable Avatar */}
+                      <Link 
+                        to={commentAuthorId ? `/profile/${commentAuthorId}` : "/profile"} 
+                        onClick={onClose}
+                        className="flex-shrink-0 cursor-pointer"
+                      >
+                        <img src={commentAuthorPic} alt="Commenter" className="w-8 h-8 rounded-full object-cover mt-0.5 hover:opacity-90 transition-opacity" />
+                      </Link>
+
                       <div className="flex-1 text-xs space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-gray-900 capitalize text-[13px]">{commentAuthorName}</span>
+                          {/* Clickable Commenter Name */}
+                          <Link 
+                            to={commentAuthorId ? `/profile/${commentAuthorId}` : "/profile"} 
+                            onClick={onClose}
+                            className="font-bold text-gray-900 capitalize text-[13px] hover:text-[#851D52] hover:underline transition-colors cursor-pointer"
+                          >
+                            {commentAuthorName}
+                          </Link>
                           <span className="text-[10px] text-gray-400 font-medium">{moment(comment.createdAt).fromNow()}</span>
                         </div>
                         <p className="text-gray-700 text-sm leading-relaxed break-words">{comment.content}</p>
@@ -213,7 +236,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               <button
                 onClick={handleAddComment}
                 disabled={submittingComment}
-                className="w-10 h-10 bg-gradient-to-tr from-[#4a0d33] via-[#851D52] to-[#851D52] text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md cursor-pointer"
+                className="w-10 h-10 bg-gradient-to-tr from-[#4a0d33] via-[#851D52] to-[#851D52] text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md cursor-pointer hover:opacity-90 transition-opacity"
               >
                 <Send size={18} strokeWidth={2.5} className="ml-0.5 text-white" />
               </button>

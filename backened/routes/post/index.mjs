@@ -1,13 +1,12 @@
 import express from "express"
 import { PostModel } from "../../models/index.mjs"
 import { isValidObjectId } from "mongoose"
-import {multerMiddleware} from "../../libs/multer.mjs"
-import {uploadOnCloudinary} from "../../libs/cloudinary.mjs"
+import { multerMiddleware } from "../../libs/multer.mjs"
+import { uploadOnCloudinary } from "../../libs/cloudinary.mjs"
 
 const router = express.Router()
 
 // 1. CREATE POST
-// CREATE POST ROUTE
 router.post("/post", multerMiddleware.any(), async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -43,25 +42,41 @@ router.post("/post", multerMiddleware.any(), async (req, res) => {
     }
 })
 
-// 2. GET ALL POSTS
+// 2. GET ALL POSTS (UPDATED WITH PAGINATION)
 router.get("/post", async (req, res) => {
     try {
-        const allPost = await PostModel.find()
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 5
+        const skip = (page - 1) * limit
+
+        const totalPosts = await PostModel.countDocuments()
+
+        const posts = await PostModel.find()
             .sort({ _id: -1 }) 
+            .skip(skip)
+            .limit(limit)
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
             .populate("comments.authorId", "firstName lastName firstname lastname profilePicture profilepicture")
 
+        const hasMore = (skip + posts.length) < totalPosts
+
         return res.send({
-            message: "all posts fetched",
-            data: allPost
+            message: "posts fetched successfully",
+            data: posts,
+            pagination: {
+                totalPosts,
+                currentPage: page,
+                hasMore,
+                limit
+            }
         })
     } catch (error) {
-        console.error(error)
+        console.error("Fetch Posts Error:", error)
         return res.status(500).send({ message: "internal server error" })
     }
 })
 
-// 6. EDIT / UPDATE POST
+// 3. EDIT / UPDATE POST
 router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -78,12 +93,10 @@ router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
             return res.status(404).send({ message: "post not found" });
         }
 
-        // Ownership Check: Sirf wahi user update kar sakta hai jisne post banayi ho
         if (post.authorId.toString() !== req.currentUser._id.toString()) {
             return res.status(403).send({ message: "unauthorized: you can only edit your own posts" });
         }
 
-        // Check if new image uploaded
         const file = req?.files?.[0];
         let imageUrl = post.imageUrl;
 
@@ -109,7 +122,7 @@ router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     }
 });
 
-// 7. DELETE POST
+// 4. DELETE POST
 router.delete("/post/:postId", async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -126,7 +139,6 @@ router.delete("/post/:postId", async (req, res) => {
             return res.status(404).send({ message: "post not found" });
         }
 
-        // Ownership Check: Sirf owner hi delete kar sake
         if (post.authorId.toString() !== req.currentUser._id.toString()) {
             return res.status(403).send({ message: "unauthorized: you can only delete your own posts" });
         }
@@ -140,7 +152,7 @@ router.delete("/post/:postId", async (req, res) => {
     }
 });
 
-// 3. LIKE / UNLIKE POST
+// 5. LIKE / UNLIKE POST
 router.post("/post/:postId/like", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -167,7 +179,7 @@ router.post("/post/:postId/like", async (req, res) => {
     }
 })
 
-// 4. ADD COMMENT TO POST
+// 6. ADD COMMENT TO POST
 router.post("/post/:postId/comment", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -204,9 +216,7 @@ router.post("/post/:postId/comment", async (req, res) => {
     }
 })
 
-// 5. LIKE / UNLIKE A SPECIFIC COMMENT
-// 5. LIKE / UNLIKE A SPECIFIC COMMENT
-// 5. LIKE / UNLIKE A SPECIFIC COMMENT
+// 7. LIKE / UNLIKE COMMENT
 router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -216,7 +226,6 @@ router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
         const { postId, commentId } = req.params;
         const userId = req.currentUser._id;
 
-        // 1. Check if Post & Comment exist
         const post = await PostModel.findById(postId);
         if (!post) {
             return res.status(404).send({ message: "post not found" });
@@ -227,22 +236,18 @@ router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
             return res.status(404).send({ message: "comment not found" });
         }
 
-        // 2. Safely check if user already liked
         const commentLikes = comment.likes || [];
         const hasLiked = commentLikes.some(id => id.toString() === userId.toString());
 
-        // 3. Positional Operator Query for Embedded Subdocument Array
         const updateQuery = hasLiked 
             ? { $pull: { "comments.$.likes": userId } } 
             : { $addToSet: { "comments.$.likes": userId } };
 
-        // Database me direct atomic write
         await PostModel.updateOne(
             { _id: postId, "comments._id": commentId },
             updateQuery
         );
 
-        // 4. Fetch Populated Updated Post
         const updatedPost = await PostModel.findById(postId)
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
             .populate("comments.authorId", "firstName lastName firstname lastname profilePicture profilepicture");
@@ -257,4 +262,5 @@ router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
         return res.status(500).send({ message: "internal server error" });
     }
 });
+
 export default router
