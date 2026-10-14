@@ -238,4 +238,77 @@ router.post("/verify-otp", async (req, res, next) => {
     }
 })  
 
+router.post("/forgot-password-complete", async (req, res, next) => {
+    try {
+        const email = req.body.email
+        const otp = req.body.otp
+        const newPassword = req.body.newPassword
+
+        // email validation
+        if (!email) {
+            return res.status(400).send({
+                message: "email is required"
+            })
+        }
+
+        // pattern validation
+        if (!emailPattern.test(email.toLowerCase())) {
+            return res.status(400).send({
+                message: "email is invalid"
+            })
+        }
+
+        // otp validation
+        if (!otp) {
+            return res.status(400).send({
+                message: "otp is required"
+            })
+        }
+
+        // password validation
+        if (!newPassword) {
+            return res.status(400).send({
+                message: "password is required"
+            })
+        }
+
+        // does otp exist for email
+        const existingOtp = await PasswordOtpModel.findOne({ email: email }).sort({ createdAt: -1 })
+
+        if (!existingOtp) {
+            return res.status(400).send({
+                message: "otp is invalid"
+            })
+        }
+
+        // is otp correct
+        const isOtpValid = await bcrypt.compare(otp, existingOtp.otpCodeHash)
+        if (!isOtpValid) {
+            return res.status(400).send({
+                message: "otp is invalid"
+            })
+        }
+
+        const passwordHash = await bcrypt.hash(newPassword, 12)
+
+        // mark email verified
+        await UserModel.updateOne({ email: email }, {
+            $set: {
+                password: passwordHash
+            }
+        })
+
+        return res.send({
+            message: "password updated"
+        })
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({
+            message: "internal server error"
+        })
+    }
+})
+
+
 export default router

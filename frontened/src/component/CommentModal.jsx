@@ -1,19 +1,27 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import axios from 'axios'
 import moment from 'moment'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { X, Heart, MessageCircle, Send } from 'lucide-react'
+import { X, Heart, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { baseUrl } from '../core'
 
 const API_POST_URL = `${baseUrl}/api/v1/post`
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, likedPosts, likeCounts }) => {
-  const navigate = useNavigate()
   const [modalCommentText, setModalCommentText] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
+  // Instant render ke liye local state
+  const [commentsList, setCommentsList] = useState([])
+
+  // Jab bhi selectedPost update ya set ho, local comments sync karein
+  useEffect(() => {
+    if (selectedPost) {
+      setCommentsList(selectedPost?.comments || [])
+    }
+  }, [selectedPost])
 
   if (!selectedPost) return null
 
@@ -21,35 +29,49 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
   const postAuthor = selectedPost?.authorId || selectedPost?.user || selectedPost?.author || {}
   const authorName = `${postAuthor?.firstname || postAuthor?.firstName || 'User'} ${postAuthor?.lastname || postAuthor?.lastName || ''}`
   const authorPic = postAuthor?.profilePicture || postAuthor?.profilepicture || DEFAULT_AVATAR
-  const commentsList = selectedPost?.comments || []
 
-  // Extract Image URL with fallbacks
   const postImage = selectedPost?.imageUrl 
                  || selectedPost?.image 
                  || (typeof selectedPost?.files === 'string' ? selectedPost?.files : selectedPost?.files?.[0]) 
                  || null;
 
-  // Add Comment API Call
+  // Add Comment API Call with Instant Optimistic UI Update
   const handleAddComment = async () => {
-    if (!modalCommentText.trim()) return
+    if (!modalCommentText.trim() || submittingComment) return
+
+    const commentContent = modalCommentText.trim()
+    setModalCommentText("") // Input reset
 
     try {
       setSubmittingComment(true)
       const token = localStorage.getItem("token")
+      const cleanToken = token ? token.replace(/^Bearer\s+/i, "").trim() : ""
+
       const resp = await axios.post(`${API_POST_URL}/${postId}/comment`, {
-        text: modalCommentText
+        text: commentContent
       }, {
-        headers: { token }
+        headers: { 
+          token: cleanToken,
+          Authorization: `Bearer ${cleanToken}`
+        }
       })
 
-      if (resp.data?.data) {
-        setModalCommentText("")
+      // Backend response se updated post ya comment data lekar local state instant update karein
+      const updatedPost = resp.data?.data || resp.data?.post
+      if (updatedPost) {
+        if (updatedPost.comments) {
+          setCommentsList(updatedPost.comments)
+        }
+        if (onPostUpdated) onPostUpdated(updatedPost)
         toast.success("Comment posted")
-        if (onPostUpdated) onPostUpdated(resp.data.data)
+      } else {
+        // Fallback: Re-sync
+        if (onPostUpdated) onPostUpdated()
       }
     } catch (error) {
       console.error("Error adding comment:", error)
-      toast.error("Failed to add comment")
+      toast.error(error?.response?.data?.message || "Failed to add comment")
+      setModalCommentText(commentContent) // Error par text wapas restore karein
     } finally {
       setSubmittingComment(false)
     }
@@ -64,12 +86,19 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
     try {
       const token = localStorage.getItem("token")
+      const cleanToken = token ? token.replace(/^Bearer\s+/i, "").trim() : ""
+
       const resp = await axios.post(`${API_POST_URL}/${postId}/comment/${commentId}/like`, {}, {
-        headers: { token }
+        headers: { 
+          token: cleanToken,
+          Authorization: `Bearer ${cleanToken}`
+        }
       })
 
-      if (resp.data?.data && onPostUpdated) {
-        onPostUpdated(resp.data.data)
+      const updatedPost = resp.data?.data || resp.data?.post
+      if (updatedPost && updatedPost.comments) {
+        setCommentsList(updatedPost.comments)
+        if (onPostUpdated) onPostUpdated(updatedPost)
       }
     } catch (error) {
       console.error("Error liking comment:", error)
@@ -102,16 +131,16 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             <X size={18} />
           </button>
 
-          {/* LEFT SIDE: Burgundy Gradient Panel */}
+          {/* LEFT SIDE: Burgundy Gradient Panel (FIXED NO-SCROLL) */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
             
-            {/* Middle Scrollable Section */}
-            <div className="flex-1 overflow-y-auto pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            {/* Top/Middle Section */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Author Info */}
               <Link 
                 to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
                 onClick={onClose}
-                className="flex items-center gap-3 mb-4 group cursor-pointer w-fit"
+                className="flex items-center gap-3 mb-3 group cursor-pointer w-fit flex-shrink-0"
               >
                 <img 
                   src={authorPic} 
@@ -125,23 +154,25 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               </Link>
 
               {/* Title & Description */}
-              <h2 className="text-lg font-bold text-white mb-2 leading-snug tracking-tight">{selectedPost?.title}</h2>
-              <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal mb-4">{selectedPost?.description}</p>
+              <div className="flex-shrink-0 mb-2">
+                <h2 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2">{selectedPost?.title}</h2>
+                <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal line-clamp-3 mt-1">{selectedPost?.description}</p>
+              </div>
 
               {/* Image Frame Container */}
               {postImage && (
-                <div className="w-full rounded-2xl overflow-hidden border border-white/15 bg-black/20 shadow-inner max-h-[280px] flex items-center justify-center my-2">
+                <div className="flex-1 w-full rounded-2xl overflow-hidden border border-white/15 bg-black/20 shadow-inner flex items-center justify-center my-2 min-h-0">
                   <img 
                     src={postImage} 
                     alt="Post media" 
-                    className="w-full h-full max-h-[280px] object-cover"
+                    className="w-full h-full object-cover rounded-2xl"
                   />
                 </div>
               )}
             </div>
 
             {/* Bottom Fixed Stats */}
-            <div className="pt-4 border-t border-white/15 mt-3 flex items-center gap-3 text-white text-xs font-medium flex-shrink-0">
+            <div className="pt-3 border-t border-white/15 mt-2 flex items-center gap-3 text-white text-xs font-medium flex-shrink-0">
               <div className="flex items-center gap-1.5 bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                 <Heart className={`w-3.5 h-3.5 ${likedPosts?.[postId] ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
                 <span>{likeCounts?.[postId] || 0} Likes</span>
@@ -154,9 +185,9 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           </div>
 
           {/* RIGHT SIDE: Comments Panel */}
-          <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full">
+          <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0">
             {/* Header */}
-            <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-center relative shadow-sm">
+            <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-center relative shadow-sm flex-shrink-0">
               <h3 className="font-bold text-[#5E1243] text-base text-center">Comments</h3>
               <span className="hidden sm:block absolute right-14 text-xs text-gray-400 font-medium">{commentsList.length} total</span>
             </div>
@@ -164,8 +195,8 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             {/* Comments List */}
             <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-3.5">
               {commentsList.length > 0 ? (
-                commentsList.map((comment) => {
-                  const cAuthor = comment?.authorId || {}
+                commentsList.map((comment, idx) => {
+                  const cAuthor = comment?.authorId || comment?.user || comment?.author || {}
                   const commentAuthorId = cAuthor?._id || cAuthor?.id
                   const commentAuthorName = `${cAuthor?.firstname || cAuthor?.firstName || 'User'} ${cAuthor?.lastname || cAuthor?.lastName || ''}`
                   const commentAuthorPic = cAuthor?.profilePicture || cAuthor?.profilepicture || DEFAULT_AVATAR
@@ -173,7 +204,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                   const isCommentLiked = cLikes.some(cId => String(cId?._id || cId) === currentUserId)
 
                   return (
-                    <div key={comment._id} className="flex gap-3 items-start bg-white p-3.5 rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                    <div key={comment._id || idx} className="flex gap-3 items-start bg-white p-3.5 rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                       
                       {/* Clickable Avatar */}
                       <Link 
@@ -186,7 +217,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
                       <div className="flex-1 text-xs space-y-1">
                         <div className="flex items-center justify-between">
-                          {/* Clickable Commenter Name */}
                           <Link 
                             to={commentAuthorId ? `/profile/${commentAuthorId}` : "/profile"} 
                             onClick={onClose}
@@ -194,9 +224,9 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                           >
                             {commentAuthorName}
                           </Link>
-                          <span className="text-[10px] text-gray-400 font-medium">{moment(comment.createdAt).fromNow()}</span>
+                          <span className="text-[10px] text-gray-400 font-medium">{comment?.createdAt ? moment(comment.createdAt).fromNow() : 'Just now'}</span>
                         </div>
-                        <p className="text-gray-700 text-sm leading-relaxed break-words">{comment.content}</p>
+                        <p className="text-gray-700 text-sm leading-relaxed break-words">{comment.content || comment.text}</p>
                         
                         <div className="flex items-center gap-3 pt-1 text-[11px] text-gray-400 font-medium">
                           <span>{cLikes.length} {cLikes.length === 1 ? 'like' : 'likes'}</span>
@@ -224,7 +254,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             </div>
 
             {/* Comment Input */}
-            <div className="p-4 border-t border-gray-200 bg-white flex items-center gap-2.5">
+            <div className="p-4 border-t border-gray-200 bg-white flex items-center gap-2.5 flex-shrink-0">
               <input
                 type="text"
                 placeholder="Add a comment..."
@@ -236,9 +266,13 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               <button
                 onClick={handleAddComment}
                 disabled={submittingComment}
-                className="w-10 h-10 bg-gradient-to-tr from-[#4a0d33] via-[#851D52] to-[#851D52] text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                className="w-10 h-10 bg-gradient-to-tr from-[#4a0d33] via-[#851D52] to-[#851D52] text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                <Send size={18} strokeWidth={2.5} className="ml-0.5 text-white" />
+                {submittingComment ? (
+                  <Loader2 size={18} className="animate-spin text-white" />
+                ) : (
+                  <Send size={18} strokeWidth={2.5} className="ml-0.5 text-white" />
+                )}
               </button>
             </div>
           </div>
