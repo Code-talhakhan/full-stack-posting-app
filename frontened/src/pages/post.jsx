@@ -26,21 +26,27 @@ const API_URL = "http://localhost:3001/api/v1/post"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 const POSTS_LIMIT = 5
 
+let cachedPosts = []
+
 const Post = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
 
   const { user } = store()
-  const [posts, setPosts] = useState([])
-  const [filteredPosts, setFilteredPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [posts, setPosts] = useState(cachedPosts)
+  const [filteredPosts, setFilteredPosts] = useState(cachedPosts)
+  
+  const [loading, setLoading] = useState(cachedPosts.length === 0)
+  const [isInitialFetched, setIsInitialFetched] = useState(cachedPosts.length > 0)
   const [activeDropdown, setActiveDropdown] = useState(null)
 
-  // Server-Side Pagination & Infinite Scroll States
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
+  
+  // Ref Lock taakay ek waqt mein sirf 1 request jaye (Loop Prevention)
+  const isFetchingRef = useRef(false)
   const observerTarget = useRef(null)
 
   const [deleteTarget, set_deleteTarget] = useState(null)
@@ -67,30 +73,33 @@ const Post = () => {
     }
   }
 
-  // Fetch posts from server page by page
-  // Fetch posts from server page by page
-  // Fetch posts with guaranteed loader delay
   const fetchPosts = async (pageNum, isInitial = false) => {
+    // Prevent concurrent duplicate requests instantly
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     try {
-      if (isInitial) setLoading(true)
-      else setIsFetchingMore(true)
+      if (isInitial && cachedPosts.length === 0) {
+        setLoading(true)
+      } else if (!isInitial) {
+        setIsFetchingMore(true)
+      }
 
-      // Minimum delay timer (1000ms = 1 sec)
-      const delayPromise = new Promise(resolve => setTimeout(resolve, 1000));
-
-      // API Call
-      const apiPromise = axios.get(`${API_URL}?page=${pageNum}&limit=${POSTS_LIMIT}`, {
+      const resp = await axios.get(`${API_URL}?page=${pageNum}&limit=${POSTS_LIMIT}`, {
         headers: getAuthHeaders() 
       });
 
-      // API Response aur Delay dono ka ek sath wait karein
-      const [resp] = await Promise.all([apiPromise, delayPromise]);
+      const fetchedPosts = resp.data?.data || []
+      const paginationInfo = resp.data?.pagination || {}
 
-      const fetchedPosts = resp.data.data || []
-      const paginationInfo = resp.data.pagination || {}
-
-      setPosts(prev => isInitial ? fetchedPosts : [...prev, ...fetchedPosts])
-      setHasMore(paginationInfo.hasMore)
+      setPosts(prev => {
+        const newPosts = isInitial ? fetchedPosts : [...prev, ...fetchedPosts]
+        cachedPosts = newPosts
+        return newPosts
+      })
+      
+      // Agar back-end posts limit se kam bheje ya hasMore false ho
+      setHasMore(paginationInfo.hasMore ?? (fetchedPosts.length === POSTS_LIMIT))
 
       // Map Likes & Like Counts
       setLikedPosts(prev => {
@@ -114,12 +123,23 @@ const Post = () => {
 
     } catch (error) {
       console.error("Error fetching posts:", error)
-      toast.error("Failed to load posts")
+      
+      // Infinite Loop Break: Error severe ho tou scroll fetching STOP kar dein
+      setHasMore(false)
+
+      if (error?.response?.status === 429) {
+        toast.error("Slow down! Too many requests.", { id: "rate-limit-toast" })
+      } else if (isInitial) {
+        toast.error("Failed to load posts")
+      }
     } finally {
       setLoading(false)
+      setIsInitialFetched(true)
       setIsFetchingMore(false)
+      isFetchingRef.current = false // Unlock for next valid trigger
     }
   }
+
   // Initial Posts Load
   useEffect(() => {
     setPage(1)
@@ -141,14 +161,13 @@ const Post = () => {
     }
   }, [searchQuery, posts])
 
-  // Intersection Observer for Scroll Trigger
+  // Intersection Observer for Scroll Trigger (FIXED LOOP)
   useEffect(() => {
     if (loading || isFetchingMore || !hasMore) return
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
-          setIsFetchingMore(true)
+        if (entries[0].isIntersecting && hasMore && !isFetchingRef.current) {
           setPage(prevPage => {
             const nextPage = prevPage + 1
             fetchPosts(nextPage, false)
@@ -158,7 +177,7 @@ const Post = () => {
       },
       { 
         root: null, 
-        rootMargin: '150px', 
+        rootMargin: '100px', 
         threshold: 0.1 
       }
     )
@@ -173,7 +192,7 @@ const Post = () => {
         observer.unobserve(currentRef)
       }
     }
-  }, [loading, isFetchingMore, hasMore, posts.length])
+  }, [loading, isFetchingMore, hasMore])
 
   const handleLike = async (postId) => {
     if (!currentUserId) {
@@ -316,7 +335,8 @@ const Post = () => {
           </div>
         </div>
 
-        {loading ? (
+        {/* Skeleton Guard when loading and no cached data exists */}
+        {loading && filteredPosts.length === 0 ? (
           <div className="space-y-5">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] animate-pulse">
@@ -334,179 +354,172 @@ const Post = () => {
           </div>
         ) : (
           <div className="space-y-5">
-            <AnimatePresence>
-              {filteredPosts.length ? (
-                filteredPosts.map((singlePost, index) => {
-                  const postId = singlePost._id || singlePost.id
-                  const postDate = singlePost.updatedAt || singlePost.createdAt
-                  
-                  const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
-                  const postAuthorId = String(postAuthor?._id || postAuthor?.id || (typeof postAuthor === 'string' ? postAuthor : ""));
-                  const isMyPost = currentUserId && postAuthorId && currentUserId === postAuthorId;
+            {filteredPosts.length > 0 ? (
+              filteredPosts.map((singlePost) => {
+                const postId = singlePost._id || singlePost.id
+                const postDate = singlePost.updatedAt || singlePost.createdAt
+                
+                const postAuthor = singlePost?.authorId || singlePost?.user || singlePost?.author || {}
+                const postAuthorId = String(postAuthor?._id || postAuthor?.id || (typeof postAuthor === 'string' ? postAuthor : ""));
+                const isMyPost = currentUserId && postAuthorId && currentUserId === postAuthorId;
 
-                  const firstName = postAuthor?.firstName || postAuthor?.firstname || postAuthor?.name || ""
-                  const lastName = postAuthor?.lastName || postAuthor?.lastname || ""
-                  const fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : "User"
-                  
-                  const profilePic = postAuthor?.profilePicture 
-                                  || postAuthor?.profilepicture 
-                                  || postAuthor?.profilePic
-                                  || (isMyPost ? (robustUser?.profilePicture || robustUser?.profilepicture) : null) 
-                                  || DEFAULT_AVATAR
+                const firstName = postAuthor?.firstName || postAuthor?.firstname || postAuthor?.name || ""
+                const lastName = postAuthor?.lastName || postAuthor?.lastname || ""
+                const fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : "User"
+                
+                const profilePic = postAuthor?.profilePicture 
+                                || postAuthor?.profilepicture 
+                                || postAuthor?.profilePic
+                                || (isMyPost ? (robustUser?.profilePicture || robustUser?.profilepicture) : null) 
+                                || DEFAULT_AVATAR
 
-                  const postImage = singlePost?.imageUrl 
-                                 || singlePost?.image 
-                                 || (typeof singlePost?.files === 'string' ? singlePost?.files : singlePost?.files?.[0]) 
-                                 || null
+                const postImage = singlePost?.imageUrl 
+                               || singlePost?.image 
+                               || (typeof singlePost?.files === 'string' ? singlePost?.files : singlePost?.files?.[0]) 
+                               || null
 
-                  const commentCount = singlePost?.comments?.length || 0
+                const commentCount = singlePost?.comments?.length || 0
 
-                  return (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.25, delay: index * 0.03 }}
-                      key={postId}
-                      className="bg-white p-4 sm:p-5 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative overflow-hidden"
-                    >
-                      {/* Post Header */}
-                      <div className="flex justify-between items-start mb-3">
-                        <Link 
-                          to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
-                          className="flex items-center gap-3 group outline-none"
-                        >
-                          <img 
-                            src={profilePic} 
-                            alt="User Profile" 
-                            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0" 
-                          />
-                          <div className="flex flex-col">
-                            <h4 className="font-bold text-gray-900 text-[15px] capitalize group-hover:text-[#851D52] transition-colors leading-tight">
-                              {fullName}
-                            </h4>
-                            <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-0.5">
-                              <Clock className="w-3 h-3" />
-                              <span>{postDate ? moment(postDate).fromNow() : "Recently"}</span>
-                            </div>
-                          </div>
-                        </Link>
-
-                        {isMyPost && (
-                          <div className="relative z-10">
-                            <button
-                              onClick={() => setActiveDropdown(activeDropdown === postId ? null : postId)}
-                              className="p-1.5 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors outline-none cursor-pointer"
-                            >
-                              <MoreVertical className="w-5 h-5" />
-                            </button>
-
-                            <AnimatePresence>
-                              {activeDropdown === postId && (
-                                <>
-                                  <div className="fixed inset-0 z-30" onClick={() => setActiveDropdown(null)}></div>
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100 z-40 py-1 overflow-hidden"
-                                  >
-                                    <button
-                                      onClick={() => {
-                                        openEditModal(postId, singlePost.title, singlePost.description)
-                                        setActiveDropdown(null)
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors cursor-pointer"
-                                    >
-                                      <Edit2 className="w-4 h-4" /> Edit
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        openDeleteModal(postId)
-                                        setActiveDropdown(null)
-                                      }}
-                                      className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                                    >
-                                      <Trash2 className="w-4 h-4" /> Delete
-                                    </button>
-                                  </motion.div>
-                                </>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Post Body */}
-                      <div 
-                        onClick={() => navigate(`/post/${postId}`)}
-                        className="cursor-pointer"
+                return (
+                  <div
+                    key={postId}
+                    className="bg-white p-4 sm:p-5 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative overflow-hidden"
+                  >
+                    {/* Post Header */}
+                    <div className="flex justify-between items-start mb-3">
+                      <Link 
+                        to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
+                        className="flex items-center gap-3 group outline-none"
                       >
-                        <h4 className="font-bold text-gray-900 text-[16px] mb-1">
-                          {singlePost.title}
-                        </h4>
-                        <p className="text-gray-600 text-[14px] sm:text-[15px] leading-relaxed whitespace-pre-line break-words mb-3">
-                          {singlePost.description}
-                        </p>
-
-                        {/* Image Container */}
-                        {postImage && (
-                          <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
-                            <img 
-                              src={postImage} 
-                              alt="Post Media" 
-                              className="w-full max-h-[450px] object-cover rounded-[16px] hover:scale-[1.01] transition-transform duration-300"
-                              loading="lazy"
-                            />
+                        <img 
+                          src={profilePic} 
+                          alt="User Profile" 
+                          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover flex-shrink-0" 
+                        />
+                        <div className="flex flex-col">
+                          <h4 className="font-bold text-gray-900 text-[15px] capitalize group-hover:text-[#851D52] transition-colors leading-tight">
+                            {fullName}
+                          </h4>
+                          <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium mt-0.5">
+                            <Clock className="w-3 h-3" />
+                            <span>{postDate ? moment(postDate).fromNow() : "Recently"}</span>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      </Link>
 
-                      {/* Action Buttons Bar */}
-                      <div className="pt-2.5 mt-1 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
-                        <button
-                          onClick={() => handleLike(postId)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer ${
-                            likedPosts[postId] ? 'text-rose-600 bg-rose-50 font-semibold' : 'hover:text-rose-500 hover:bg-gray-50'
-                          }`}
-                        >
-                          <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${likedPosts[postId] ? 'fill-rose-600 text-rose-600' : ''}`} />
-                          <span className="text-xs sm:text-sm">{likeCounts[postId] || 0}</span>
-                        </button>
+                      {isMyPost && (
+                        <div className="relative z-10">
+                          <button
+                            onClick={() => setActiveDropdown(activeDropdown === postId ? null : postId)}
+                            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition-colors outline-none cursor-pointer"
+                          >
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
 
-                        <button
-                          onClick={() => setSelectedPostModal(singlePost)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:text-[#851D52] hover:bg-gray-50 transition-all cursor-pointer"
-                        >
-                          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                          <span className="text-xs sm:text-sm">{commentCount}</span>
-                        </button>
+                          <AnimatePresence>
+                            {activeDropdown === postId && (
+                              <>
+                                <div className="fixed inset-0 z-30" onClick={() => setActiveDropdown(null)}></div>
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="absolute right-0 mt-1 w-36 bg-white rounded-xl shadow-[0_5px_15px_rgba(0,0,0,0.1)] border border-gray-100 z-40 py-1 overflow-hidden"
+                                >
+                                  <button
+                                    onClick={() => {
+                                      openEditModal(postId, singlePost.title, singlePost.description)
+                                      setActiveDropdown(null)
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors cursor-pointer"
+                                  >
+                                    <Edit2 className="w-4 h-4" /> Edit
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      openDeleteModal(postId)
+                                      setActiveDropdown(null)
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-[14px] text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4" /> Delete
+                                  </button>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
 
-                        <button
-                          onClick={() => handleShare(postId)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-all cursor-pointer"
-                        >
-                          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  )
-                })
-              ) : (
-                <div className="py-16 text-center flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] bg-white/50">
-                  <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center">
-                    <MessageSquareOff className="w-10 h-10 text-[#851D52]/50" />
+                    {/* Post Body */}
+                    <div 
+                      onClick={() => navigate(`/post/${postId}`)}
+                      className="cursor-pointer"
+                    >
+                      <h4 className="font-bold text-gray-900 text-[16px] mb-1">
+                        {singlePost.title}
+                      </h4>
+                      <p className="text-gray-600 text-[14px] sm:text-[15px] leading-relaxed whitespace-pre-line break-words mb-3">
+                        {singlePost.description}
+                      </p>
+
+                      {/* Image Container */}
+                      {postImage && (
+                        <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
+                          <img 
+                            src={postImage} 
+                            alt="Post Media" 
+                            className="w-full max-h-[450px] object-cover rounded-[16px] hover:scale-[1.01] transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons Bar */}
+                    <div className="pt-2.5 mt-1 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
+                      <button
+                        onClick={() => handleLike(postId)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer ${
+                          likedPosts[postId] ? 'text-rose-600 bg-rose-50 font-semibold' : 'hover:text-rose-500 hover:bg-gray-50'
+                        }`}
+                      >
+                        <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${likedPosts[postId] ? 'fill-rose-600 text-rose-600' : ''}`} />
+                        <span className="text-xs sm:text-sm">{likeCounts[postId] || 0}</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedPostModal(singlePost)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:text-[#851D52] hover:bg-gray-50 transition-all cursor-pointer"
+                      >
+                        <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="text-xs sm:text-sm">{commentCount}</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleShare(postId)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:text-gray-900 hover:bg-gray-50 transition-all cursor-pointer"
+                      >
+                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-gray-600 font-semibold text-lg">
-                    {searchQuery ? `No posts found for "${searchQuery}"` : "No posts on your feed"}
-                  </p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {searchQuery ? "Try searching with different keywords" : "Be the first one to share something!"}
-                  </p>
+                )
+              })
+            ) : isInitialFetched ? (
+              <div className="py-16 text-center flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-[2rem] bg-white/50">
+                <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center">
+                  <MessageSquareOff className="w-10 h-10 text-[#851D52]/50" />
                 </div>
-              )}
-            </AnimatePresence>
+                <p className="text-gray-600 font-semibold text-lg">
+                  {searchQuery ? `No posts found for "${searchQuery}"` : "No posts on your feed"}
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  {searchQuery ? "Try searching with different keywords" : "Be the first one to share something!"}
+                </p>
+              </div>
+            ) : null}
 
             {/* SCROLL TARGET LOADER */}
             <div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
@@ -518,7 +531,7 @@ const Post = () => {
               ) : hasMore ? (
                 <div className="h-6 w-full"></div>
               ) : posts.length > 5 ? (
-                <p className="text-xs text-gray-400 font-medium">No more posts to load </p>
+                <p className="text-xs text-gray-400 font-medium">No more posts to load</p>
               ) : null}
             </div>
           </div>

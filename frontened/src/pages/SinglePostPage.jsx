@@ -28,6 +28,7 @@ const SinglePostPage = () => {
   const [post, setPost] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false)
 
   // Like & Modal States
   const [isLiked, setIsLiked] = useState(false)
@@ -53,14 +54,17 @@ const SinglePostPage = () => {
 
       try {
         const resp = await axios.get(`${API_POST_URL}/${postId}`, { headers: { token } })
-        postData = resp.data?.data || resp.data
+        postData = resp.data?.data || resp.data?.post || resp.data
       } catch (err) {
+        // Fallback search in feed API
         const allResp = await axios.get(API_POST_URL, { headers: { token } })
-        const allPosts = allResp.data?.data || []
+        const rawPosts = allResp.data?.data || allResp.data || []
+        const allPosts = Array.isArray(rawPosts) ? rawPosts : []
+        
         postData = allPosts.find(p => String(p._id || p.id) === String(postId))
       }
 
-      if (!postData) {
+      if (!postData || typeof postData !== 'object' || (!postData._id && !postData.id)) {
         setNotFound(true)
         return
       }
@@ -81,6 +85,12 @@ const SinglePostPage = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Back button handling with smooth state
+  const handleBack = () => {
+    setIsNavigatingBack(true)
+    navigate(-1)
   }
 
   // Handle Post Like
@@ -121,10 +131,18 @@ const SinglePostPage = () => {
     }
   }
 
+  // Agar user back navigate kar raha hai, tou screen par empty/notFound flash na ho
+  if (isNavigatingBack) {
+    return (
+      <div className="min-h-screen bg-[#F4F7FB]">
+        <Header hideSearch={true} />
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F4F7FB]">
-        {/* Pass hideSearch prop */}
         <Header hideSearch={true} />
         <div className="max-w-4xl mx-auto px-4 pt-12 flex justify-center">
           <div className="w-10 h-10 border-4 border-[#851D52] border-t-transparent rounded-full animate-spin"></div>
@@ -136,7 +154,6 @@ const SinglePostPage = () => {
   if (notFound || !post) {
     return (
       <div className="min-h-screen bg-[#F4F7FB] font-sans flex flex-col">
-        {/* Pass hideSearch prop */}
         <Header hideSearch={true} />
         <main className="flex-1 flex flex-col items-center justify-center p-4">
           <div className="w-20 h-20 mb-4 rounded-full bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
@@ -163,17 +180,16 @@ const SinglePostPage = () => {
   // Extract Post Image with Fallbacks
   const postImage = post?.imageUrl 
                  || post?.image 
-                 || (typeof post?.files === 'string' ? post?.files : post?.files?.[0]) 
+                 || (typeof post?.files === 'string' ? post?.files : post?.files?.[0]?.url || post?.files?.[0]) 
                  || null;
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
-      {/* Search bar is hidden here */}
       <Header hideSearch={true} />
 
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="flex items-center gap-2 mb-6 text-gray-600 hover:text-[#851D52] font-medium transition-colors cursor-pointer"
         >
           <ArrowLeft size={20} />
@@ -209,7 +225,7 @@ const SinglePostPage = () => {
 
           {/* Title, Description & Image Section */}
           <div className="pl-1 mb-4">
-            <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{post.title}</h4>
+            {post.title && <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{post.title}</h4>}
             <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words mb-3">
               {post.description}
             </p>

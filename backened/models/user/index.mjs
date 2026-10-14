@@ -28,7 +28,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         default: null,
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
     }
+
 }, { timestamps: true })
 
 export const UserModel = mongoose.model("users", userSchema)

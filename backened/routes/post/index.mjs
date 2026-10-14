@@ -42,7 +42,7 @@ router.post("/post", multerMiddleware.any(), async (req, res) => {
     }
 })
 
-// 2. GET ALL POSTS (UPDATED WITH PAGINATION)
+// 2. GET ALL POSTS (WITH PAGINATION)
 router.get("/post", async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1
@@ -76,7 +76,34 @@ router.get("/post", async (req, res) => {
     }
 })
 
-// 3. EDIT / UPDATE POST
+// 3. GET SINGLE POST BY ID (ISSUE RESOLVED - ADDED MISSING ROUTE)
+router.get("/post/:postId", async (req, res) => {
+    try {
+        const { postId } = req.params
+
+        if (!isValidObjectId(postId)) {
+            return res.status(400).send({ message: "invalid post id" })
+        }
+
+        const post = await PostModel.findById(postId)
+            .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
+            .populate("comments.authorId", "firstName lastName firstname lastname profilePicture profilepicture")
+
+        if (!post) {
+            return res.status(404).send({ message: "post not found" })
+        }
+
+        return res.send({
+            message: "post fetched successfully",
+            data: post
+        })
+    } catch (error) {
+        console.error("Fetch Single Post Error:", error)
+        return res.status(500).send({ message: "internal server error" })
+    }
+})
+
+// 4. EDIT / UPDATE POST
 router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -122,7 +149,7 @@ router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     }
 });
 
-// 4. DELETE POST
+// 5. DELETE POST
 router.delete("/post/:postId", async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -152,7 +179,7 @@ router.delete("/post/:postId", async (req, res) => {
     }
 });
 
-// 5. LIKE / UNLIKE POST
+// 6. LIKE / UNLIKE POST
 router.post("/post/:postId/like", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -179,7 +206,7 @@ router.post("/post/:postId/like", async (req, res) => {
     }
 })
 
-// 6. ADD COMMENT TO POST
+// 7. ADD COMMENT TO POST
 router.post("/post/:postId/comment", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -216,7 +243,7 @@ router.post("/post/:postId/comment", async (req, res) => {
     }
 })
 
-// 7. LIKE / UNLIKE COMMENT
+// 8. LIKE / UNLIKE COMMENT
 router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
     try {
         if (!req.currentUser) {

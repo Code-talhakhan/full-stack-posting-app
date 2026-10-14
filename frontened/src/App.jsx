@@ -5,12 +5,14 @@ import axios from 'axios'
 import Posts from "./pages/post"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
+import VerifyEmail from "./pages/VerifyEmail.jsx"
 import Profile from "./pages/Profile"
 import SinglePostPage from "./pages/SinglePostPage.jsx"
 import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
 import SplashScreen from "./component/SplashScreen"
+
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -36,22 +38,19 @@ const App = () => {
       if (!token) {
         setTimeout(() => {
           global_logout();
-        }, 1500); 
+        }, 1200); 
         return;
       }
 
-      const resp = await axios.get(`${baseUrl}/api/v1/profile`, {
-        headers: {
-          token: token
-        }
-      });
+     
+      const resp = await axios.get(`${baseUrl}/api/v1/profile`);
       
       setTimeout(() => {
         global_login(resp.data);
       }, 1000);
 
     } catch (error) {
-      console.error(error);
+      console.error("PROFILE_FETCH_ERROR:", error);
       
       setTimeout(() => {
         global_logout();
@@ -68,8 +67,9 @@ const App = () => {
       <Toaster position="top-right" richColors />
 
       <Routes>
-        {/* SHARED PUBLIC/LOGGED IN ROUTE: Single post page route har case me open hona chahiye */}
+        {/* SHARED ROUTES */}
         <Route path="/post/:postId" element={<SinglePostPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* LOGGED OUT USERS */}
         {isLogin === false && (

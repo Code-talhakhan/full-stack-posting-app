@@ -5,8 +5,7 @@ import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import signupPic from "../assets/signup-pic.png"
-
-const baseUrl = "http://localhost:3001"
+import { baseUrl } from "../core" // core se central baseUrl import karna best practise hai
 
 const Input = ({ label, type = "text", placeholder, value, onChange, isPassword }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -84,14 +83,21 @@ const Signup = () => {
 
     try {
       set_loading(true)
-      const resp = await axios.post(`${baseUrl}/api/v1/signup`, {
+
+      // 1. User Signup Request
+      const signupResp = await axios.post(`${baseUrl}/api/v1/signup`, {
         firstname: firstname,
         lastname: lastname,
         email: email,
         password: password,
       })
-      
-      toast(resp?.data?.message || "Signup Successful!", {
+
+      // 2. Trigger Send OTP
+      await axios.post(`${baseUrl}/api/v1/send-otp`, {
+        email: email.toLowerCase()
+      })
+
+      toast("Signup Successful! OTP sent to your email.", {
         icon: <CheckCircle2 size={20} className="text-white" />,
         style: {
           background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
@@ -99,8 +105,10 @@ const Signup = () => {
           border: 'none',
         },
       })
-      
-      navigate("/login")
+
+      // 3. Navigate to Verify Email screen with user email in state
+      navigate("/verify-email", { state: { email: email.toLowerCase() } })
+
     } catch (error) {
       console.error(error)
       toast.error(error?.response?.data?.message || "Something went wrong. Please try again.")
@@ -124,7 +132,7 @@ const Signup = () => {
       {/* Main Container */}
       <div className="relative z-10 w-full min-h-screen sm:min-h-0 max-w-4xl bg-white sm:rounded-[2rem] sm:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-none md:max-h-[90vh] overflow-y-auto md:overflow-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         
-        {/* PC LEFT PANEL (Original illustration card) */}
+        {/* PC LEFT PANEL */}
         <div className="hidden md:flex w-1/2 bg-[#fdfafb] p-8 flex-col items-center justify-center border-r border-gray-100">
           <div className="w-full max-w-[500px] mb-6 flex items-center justify-center">
             <img 
@@ -201,7 +209,7 @@ const Signup = () => {
 
             <div className="pt-2">
               <Button type="submit" disabled={loading}>
-                {loading ? "Signing up..." : "Sign up"}
+                {loading ? "Sending OTP..." : "Sign up"}
               </Button>
             </div>
           </form>
