@@ -21,7 +21,9 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  AlertTriangle
+  AlertTriangle,
+  User,
+  Loader2
 } from 'lucide-react'
 import Input from "../component/Input"
 import Header from "../component/Header"
@@ -674,69 +676,188 @@ const Profile = () => {
       />
 
       {/* Edit Profile Modal */}
-      <AnimatePresence>
-        {editOpen && isOwnProfile && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            onClick={closeEditModal}
-          >
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white rounded-[24px] p-6 shadow-2xl">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="text-lg font-bold text-[#5E1243]">Edit Profile</h3>
-                <button onClick={closeEditModal}><X size={20} className="text-gray-400" /></button>
-              </div>
-              <div className="space-y-4">
-                <Input label="First name" value={editFirstname} onChange={(e) => set_editFirstname(e.target.value)} />
-                <Input label="Last name" value={editLastname} onChange={(e) => set_editLastname(e.target.value)} />
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={closeEditModal} disabled={savingName} className="flex-1 py-2.5 rounded-xl border text-sm">Cancel</button>
-                <button onClick={saveProfile} disabled={savingName} className="flex-1 py-2.5 rounded-xl bg-[#851D52] text-white text-sm font-semibold">
-                  {savingName ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
+     <AnimatePresence>
+  {editOpen && isOwnProfile && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      onClick={closeEditModal}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 10 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
+      >
+        {/* Header Section with Icon Badge */}
+        <div className="flex justify-between items-start mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
+              <User size={22} strokeWidth={2} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div>
+              <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
+                Edit Profile
+              </h3>
+              <p className="text-xs text-gray-500 font-normal mt-0.5">
+                Update your personal information
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={closeEditModal}
+            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Form Inputs */}
+        <div className="space-y-4">
+          <Input 
+            label="First name" 
+            value={editFirstname} 
+            onChange={(e) => set_editFirstname(e.target.value)} 
+          />
+          <Input 
+            label="Last name" 
+            value={editLastname} 
+            onChange={(e) => set_editLastname(e.target.value)} 
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 mt-7">
+          <button
+            type="button"
+            onClick={closeEditModal}
+            disabled={savingName}
+            className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          
+          <button
+            type="button"
+            onClick={saveProfile}
+            disabled={savingName}
+            className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {savingName ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                <span>Saving...</span>
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Security Modal */}
       <AnimatePresence>
-        {securityOpen && isOwnProfile && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-            onClick={closeSecurityModal}
-          >
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white rounded-[24px] p-6 shadow-2xl">
-              <div className="flex justify-between items-center mb-2">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={20} className="text-[#851D52]" />
-                  <h3 className="text-lg font-bold text-[#5E1243]">Security Settings</h3>
-                </div>
-                <button onClick={closeSecurityModal}><X size={20} className="text-gray-400" /></button>
-              </div>
-              <p className="text-sm text-gray-500 mb-5">Update your account password</p>
-              <div className="space-y-4">
-                <Input label="Current Password" isPassword value={current_password} onChange={(e) => set_current_password(e.target.value)} />
-                <Input label="New Password" isPassword value={new_password} onChange={(e) => set_new_password(e.target.value)} />
-                <Input label="Confirm New Password" isPassword value={rep_password} onChange={(e) => set_rep_password(e.target.value)} />
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={closeSecurityModal} disabled={savingPassword} className="flex-1 py-2.5 rounded-xl border text-sm">Cancel</button>
-                <button onClick={updatePassword} disabled={savingPassword} className="flex-1 py-2.5 rounded-xl bg-[#851D52] text-white text-sm font-semibold">
-                  {savingPassword ? "Updating..." : "Update Password"}
-                </button>
-              </div>
+  {securityOpen && isOwnProfile && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+      onClick={closeSecurityModal}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 10 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
+      >
+        {/* Header Section */}
+        <div className="flex justify-between items-start mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
+              <ShieldCheck size={22} strokeWidth={2} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div>
+              <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
+                Security Settings
+              </h3>
+              <p className="text-xs text-gray-500 font-normal mt-0.5">
+                Update your account password
+              </p>
+            </div>
+          </div>
+          <button 
+            onClick={closeSecurityModal}
+            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Inputs */}
+        <div className="space-y-4">
+          <Input 
+            label="Current Password" 
+            isPassword 
+            value={current_password} 
+            onChange={(e) => set_current_password(e.target.value)} 
+          />
+
+          <Input 
+            label="New Password" 
+            isPassword 
+            value={new_password} 
+            onChange={(e) => set_new_password(e.target.value)} 
+          />
+          
+          <Input 
+            label="Confirm New Password" 
+            isPassword 
+            value={rep_password} 
+            onChange={(e) => set_rep_password(e.target.value)} 
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 mt-7">
+          <button
+            type="button"
+            onClick={closeSecurityModal}
+            disabled={savingPassword}
+            className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          
+          <button
+            type="button"
+            onClick={updatePassword}
+            disabled={savingPassword}
+            className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+          >
+            {savingPassword ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                <span>Updating...</span>
+              </>
+            ) : (
+              "Update Password"
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Delete Post Modal */}
       <AnimatePresence>

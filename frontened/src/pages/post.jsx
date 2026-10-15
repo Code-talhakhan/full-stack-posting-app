@@ -45,7 +45,6 @@ const Post = () => {
   const [hasMore, setHasMore] = useState(true)
   const [isFetchingMore, setIsFetchingMore] = useState(false)
   
-  // Ref Lock taakay ek waqt mein sirf 1 request jaye (Loop Prevention)
   const isFetchingRef = useRef(false)
   const observerTarget = useRef(null)
 
@@ -74,7 +73,6 @@ const Post = () => {
   }
 
   const fetchPosts = async (pageNum, isInitial = false) => {
-    // Prevent concurrent duplicate requests instantly
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
 
@@ -98,10 +96,8 @@ const Post = () => {
         return newPosts
       })
       
-      // Agar back-end posts limit se kam bheje ya hasMore false ho
       setHasMore(paginationInfo.hasMore ?? (fetchedPosts.length === POSTS_LIMIT))
 
-      // Map Likes & Like Counts
       setLikedPosts(prev => {
         const updated = { ...prev }
         fetchedPosts.forEach(post => {
@@ -123,8 +119,6 @@ const Post = () => {
 
     } catch (error) {
       console.error("Error fetching posts:", error)
-      
-      // Infinite Loop Break: Error severe ho tou scroll fetching STOP kar dein
       setHasMore(false)
 
       if (error?.response?.status === 429) {
@@ -136,17 +130,15 @@ const Post = () => {
       setLoading(false)
       setIsInitialFetched(true)
       setIsFetchingMore(false)
-      isFetchingRef.current = false // Unlock for next valid trigger
+      isFetchingRef.current = false
     }
   }
 
-  // Initial Posts Load
   useEffect(() => {
     setPage(1)
     fetchPosts(1, true)
   }, [currentUserId])
 
-  // Search Filter Logic
   useEffect(() => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
@@ -161,7 +153,6 @@ const Post = () => {
     }
   }, [searchQuery, posts])
 
-  // Intersection Observer for Scroll Trigger (FIXED LOOP)
   useEffect(() => {
     if (loading || isFetchingMore || !hasMore) return
 
@@ -335,7 +326,6 @@ const Post = () => {
           </div>
         </div>
 
-        {/* Skeleton Guard when loading and no cached data exists */}
         {loading && filteredPosts.length === 0 ? (
           <div className="space-y-5">
             {[1, 2, 3].map((i) => (
@@ -548,23 +538,38 @@ const Post = () => {
         onPostUpdated={() => fetchPosts(1, true)}
       />
 
-      {/* Delete Confirmation Modal */}
+      {/* FIXED UI: Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={closeDeleteModal}
           >
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm bg-white rounded-[24px] p-6 text-center shadow-2xl">
-              <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="w-full max-w-sm bg-white rounded-[24px] p-6 text-center shadow-2xl border border-gray-100"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-3">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Delete this post?</h3>
-              <p className="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
+              <p className="text-xs sm:text-sm text-gray-500 mb-6">This action cannot be undone.</p>
               <div className="flex gap-3">
-                <button onClick={closeDeleteModal} disabled={deleting} className="flex-1 py-2.5 rounded-xl border text-sm">Cancel</button>
-                <button onClick={confirmDelete} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold">
+                <button 
+                  onClick={closeDeleteModal} 
+                  disabled={deleting} 
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-semibold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete} 
+                  disabled={deleting} 
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold shadow-md shadow-red-500/20 transition-all cursor-pointer"
+                >
                   {deleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
@@ -573,42 +578,75 @@ const Post = () => {
         )}
       </AnimatePresence>
 
-      {/* Edit Post Modal */}
+      
+     {/* FIXED UI: Edit Post Modal (Seamless Top Rounded Border) */}
       <AnimatePresence>
         {editTarget && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={closeEditModal}
           >
-            <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-white rounded-[24px] p-6 shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">Edit Post</h3>
-                <button onClick={closeEditModal}><X className="w-5 h-5 text-gray-400" /></button>
-              </div>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => set_editTitle(e.target.value)}
-                  className="w-full p-3 bg-gray-50 border rounded-xl text-sm"
-                  placeholder="Post Title"
-                />
-                <textarea
-                  value={editDescription}
-                  onChange={(e) => set_editDescription(e.target.value)}
-                  rows={4}
-                  className="w-full p-3 bg-gray-50 border rounded-xl text-sm resize-none"
-                  placeholder="Post Description"
-                />
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={closeEditModal} disabled={saving} className="flex-1 py-2.5 rounded-xl border text-sm">Cancel</button>
-                <button onClick={confirmEdit} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-[#851D52] text-white text-sm font-semibold">
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
+            <div 
+              onClick={(e) => e.stopPropagation()} 
+              className="w-full max-w-md bg-white rounded-[28px] overflow-hidden shadow-2xl border border-gray-100 relative pt-3"
+            >
+              {/* BURGUNDY TOP BAR (Overlaps Top Corner Curve Completely) */}
+              <div className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-[#4a0d33] via-[#851D52] to-[#e87163] z-10"></div>
+
+              <div className="p-6 pt-4">
+                <div className="flex justify-between items-center mb-5">
+                  <h3 className="font-bold text-[#5E1243] text-xl">Edit Post</h3>
+                  <button 
+                    onClick={closeEditModal}
+                    className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Title</label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => set_editTitle(e.target.value)}
+                      className="w-full py-2.5 px-4 bg-[#fdfafb] border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/40 focus:border-transparent transition-all"
+                      placeholder="Post Title"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-500 ml-1">Description</label>
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => set_editDescription(e.target.value)}
+                      rows={4}
+                      className="w-full p-3.5 bg-[#fdfafb] border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/40 focus:border-transparent transition-all resize-none leading-relaxed"
+                      placeholder="Post Description"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button 
+                    onClick={closeEditModal} 
+                    disabled={saving} 
+                    className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-semibold transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={confirmEdit} 
+                    disabled={saving} 
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#5E1243] to-[#851D52] hover:opacity-90 text-white text-sm font-semibold shadow-lg shadow-[#851D52]/20 transition-all cursor-pointer"
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

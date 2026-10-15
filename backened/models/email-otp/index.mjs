@@ -15,7 +15,7 @@ const emailOtpSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: 300 // 300 seconds = 5 minutes (5 min baad DB se auto delete ho jaye ga)
+        expires: 300 
     }
 }, { timestamps: true })
 

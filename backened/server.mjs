@@ -39,8 +39,11 @@ app.get("/users", async (req, res, next) => {
     })
 })
 
+
+app.use("/api/v1", authRoutes)
+
+
 app.use("/api/v1",
-    authRoutes,
     authGuardJWT,
     postRoutes,
     profileRoutes)

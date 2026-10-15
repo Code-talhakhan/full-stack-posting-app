@@ -66,7 +66,9 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!email.trim() || !password) {
+    const cleanEmail = email.trim().toLowerCase()
+
+    if (!cleanEmail || !password) {
       toast.error("Please enter both email and password")
       return
     }
@@ -75,7 +77,7 @@ const Login = () => {
       set_loading(true)
 
       const resp = await axios.post(`${baseUrl}/api/v1/login`, {
-        email: email,
+        email: cleanEmail,
         password: password,
       })
 
@@ -95,7 +97,7 @@ const Login = () => {
         
         try {
           const profileResp = await axios.get(`${baseUrl}/api/v1/profile`, {
-            headers: { token: token }
+            headers: { token: token, Authorization: `Bearer ${token}` }
           });
           global_login(profileResp.data);
         } catch (err) {
@@ -106,8 +108,33 @@ const Login = () => {
       navigate("/")
 
     } catch (error) {
-      console.error(error)
-      toast.error(error?.response?.data?.message || "Invalid credentials!")
+      console.error("Login Error:", error)
+      
+      const errorMsg = error?.response?.data?.message?.toLowerCase() || ""
+
+      // Check if Email is unverified (OTP Flow Integration)
+      if (errorMsg.includes("not verified") || errorMsg.includes("verify your email") || errorMsg.includes("unverified")) {
+        try {
+          toast.info("Email is not verified. Resending OTP...")
+
+          await axios.post(`${baseUrl}/api/v1/send-otp`, {
+            email: cleanEmail
+          })
+
+          toast.success("OTP sent to your email!")
+
+          navigate("/verify-email", {
+            state: {
+              email: cleanEmail
+            }
+          })
+        } catch (otpErr) {
+          console.error("OTP Send Error:", otpErr)
+          toast.error(otpErr?.response?.data?.message || "Failed to send OTP. Try again!")
+        }
+      } else {
+        toast.error(error?.response?.data?.message || "Invalid credentials!")
+      }
     } finally {
       set_loading(false)
     }
@@ -148,13 +175,24 @@ const Login = () => {
               onChange={(e) => set_email(e.target.value)}
             />
 
-            <Input
-              placeholder="••••••••"
-              label="Password"
-              isPassword={true}
-              value={password}
-              onChange={(e) => set_password(e.target.value)}
-            />
+            <div className="flex flex-col gap-1">
+              <Input
+                placeholder="••••••••"
+                label="Password"
+                isPassword={true}
+                value={password}
+                onChange={(e) => set_password(e.target.value)}
+              />
+              {/* FORGOT PASSWORD LINK */}
+              <div className="text-right">
+                <Link 
+                  to="/forgot-password" 
+                  className="text-xs font-semibold text-[#851D52] hover:underline transition-all"
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            </div>
 
             <div className="pt-2">
               <Button type="submit" disabled={loading}>

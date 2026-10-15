@@ -6,13 +6,14 @@ import Posts from "./pages/post"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import VerifyEmail from "./pages/VerifyEmail.jsx"
+import ForgotPassword from "./pages/ForgotPassword.jsx"
+import ResetPassword from "./pages/ResetPassword.jsx"
 import Profile from "./pages/Profile"
 import SinglePostPage from "./pages/SinglePostPage.jsx"
 import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
 import SplashScreen from "./component/SplashScreen"
-
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -42,7 +43,6 @@ const App = () => {
         return;
       }
 
-     
       const resp = await axios.get(`${baseUrl}/api/v1/profile`);
       
       setTimeout(() => {
@@ -76,6 +76,8 @@ const App = () => {
           <>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </>
         )}

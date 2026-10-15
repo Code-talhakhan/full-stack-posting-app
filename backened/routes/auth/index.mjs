@@ -1,5 +1,5 @@
 import express from "express"
-import { UserModel, EmailOtpModel } from "../../models/index.mjs"
+import { UserModel, EmailOtpModel, PasswordOtpModel } from "../../models/index.mjs"
 import { isValidObjectId } from "mongoose"
 import { emailPattern } from "../../utils/core.mjs"
 import bcrypt from "bcryptjs"
@@ -78,6 +78,10 @@ router.post("/login", async (req, res) => {
             return res.status(400).send({ message: "invalid credentials" })
         }
 
+        if (!userAccount.isEmailVerified) { 
+            return res.status(400).send({ message: "email is not verified" })
+        }
+
         // Generate Token
         const token = jwt.sign(
             {
@@ -96,7 +100,8 @@ router.post("/login", async (req, res) => {
                     _id: userAccount._id,
                     firstname: userAccount.firstname,
                     lastname: userAccount.lastname,
-                    email: userAccount.email
+                    email: userAccount.email,
+                    isEmailVerified: userAccount.isEmailVerified
                 }
             }
         })
@@ -113,48 +118,35 @@ router.post("/send-otp", async (req, res, next) => {
     try {
         const email = req.body.email
 
-        // email validation
         if (!email) {
-            return res.status(400).send({
-                message: "email is required"
-            })
+            return res.status(400).send({ message: "email is required" })
         }
 
-        // pattern validation
         if (!emailPattern.test(email.toLowerCase())) {
-            return res.status(400).send({
-                message: "email is invalid"
-            })
+            return res.status(400).send({ message: "email is invalid" })
         }
 
         const user = await UserModel.findOne({ email: email.toLowerCase() })
 
         if (!user) {
-            return res.status(404).send({
-                message: "account not found"
-            })
+            return res.status(404).send({ message: "account not found" })
         }
 
-        // generate otp
         const otp = otpGenerator.generate(6, {
             upperCaseAlphabets: false,
             specialChars: false,
             lowerCaseAlphabets: false,
         });
 
-        // generate otpHash
         const otpCodeHash = await bcrypt.hash(otp, 12)
 
-        // purane OTP delete kar rahe hain taakay duplicate na banein
         await EmailOtpModel.deleteMany({ email: email.toLowerCase() })
 
-        // save otp hash it to database with user email
         await EmailOtpModel.create({
             email: email.toLowerCase(),
             otpCodeHash: otpCodeHash
         })
 
-        // send otp to email
         await sendEmail(
             email.toLowerCase(),
             "Verify Your Email",
@@ -167,148 +159,157 @@ router.post("/send-otp", async (req, res, next) => {
 
     } catch (error) {
         console.error(error);
-        return res.status(500).send({
-            message: "internal server error"
-        })
+        return res.status(500).send({ message: "internal server error" })
     }
 })  
-
-// verify otp
 
 router.post("/verify-otp", async (req, res, next) => {
     try {
         const email = req.body.email
         const otp = req.body.otp
 
-        // email validation
         if (!email) {
-            return res.status(400).send({
-                message: "email is required"
-            })
+            return res.status(400).send({ message: "email is required" })
         }
         
-        // pattern validation
         if (!emailPattern.test(email.toLowerCase())) {
-            return res.status(400).send({
-                message: "email is invalid"
-            })
-        }
-        // otp validation
-        if(!otp) {
-            return res.status(400).send({
-                message: "otp is required"
-            })
+            return res.status(400).send({ message: "email is invalid" })
         }
 
-        // does otp exist for email
+        if(!otp) {
+            return res.status(400).send({ message: "otp is required" })
+        }
+
         const existingOtp = await EmailOtpModel.findOne({ email: email.toLowerCase() }).sort({ createdAt: -1 })
 
         if (!existingOtp) {
-            return res.status(400).send({
-                message: "otp is invalid"
-            })
+            return res.status(400).send({ message: "otp is invalid" })
         }
 
-        // is otp correct
         const isOtpValid = await bcrypt.compare(String(otp), existingOtp.otpCodeHash)
         if (!isOtpValid) {
-            return res.status(400).send({
-                message: "otp is invalid"
-            })
+            return res.status(400).send({ message: "otp is invalid" })
         }
 
-        // mark email verified
         await UserModel.updateOne({ email: email.toLowerCase() }, {
-            $set: {
-                isEmailVerified: true
-            }
+            $set: { isEmailVerified: true }
         })
 
-        // OTP verified ho gaya tou DB se clear kar do
         await EmailOtpModel.deleteMany({ email: email.toLowerCase() })
 
-        return res.send({
-            message: "email verified"
-        })
+        return res.send({ message: "email verified" })
     } catch (error) {
         console.error(error);
-        return res.status(500).send({
-            message: "internal server error"
-        })
+        return res.status(500).send({ message: "internal server error" })
     }
 })  
 
+// FORGOT PASSWORD - SEND OTP (ADDED MISSING ROUTE)
+router.post("/send-password-otp", async (req, res) => {
+    try {
+        const cleanEmail = req.body.email ? req.body.email.trim().toLowerCase() : ""
+
+        if (!cleanEmail) {
+            return res.status(400).send({ message: "email is required" })
+        }
+
+        if (!emailPattern.test(cleanEmail)) {
+            return res.status(400).send({ message: "email is invalid" })
+        }
+
+        const user = await UserModel.findOne({ email: cleanEmail })
+        if (!user) {
+            return res.status(404).send({ message: "account with this email does not exist" })
+        }
+
+        const otp = otpGenerator.generate(6, {
+            upperCaseAlphabets: false,
+            specialChars: false,
+            lowerCaseAlphabets: false,
+        });
+
+        const otpCodeHash = await bcrypt.hash(otp, 12)
+
+        await PasswordOtpModel.deleteMany({ email: cleanEmail })
+
+        await PasswordOtpModel.create({
+            email: cleanEmail,
+            otpCodeHash: otpCodeHash
+        })
+
+        await sendEmail(
+            cleanEmail,
+            "Reset Your Password OTP",
+            `Your password reset verification code is: ${otp}. Do not share it with anyone.`
+        )
+
+        return res.send({ message: "OTP sent to your email successfully" })
+
+    } catch (error) {
+        console.error("SEND_PASSWORD_OTP_ERROR:", error);
+        return res.status(500).send({ message: "internal server error" })
+    }
+})
+
+// FORGOT PASSWORD - COMPLETE RESET
 router.post("/forgot-password-complete", async (req, res, next) => {
     try {
-        const email = req.body.email
-        const otp = req.body.otp
+        const cleanEmail = req.body.email ? req.body.email.trim().toLowerCase() : ""
+        const cleanOtp = req.body.otp ? String(req.body.otp).trim() : ""
         const newPassword = req.body.newPassword
 
-        // email validation
-        if (!email) {
-            return res.status(400).send({
-                message: "email is required"
-            })
+        if (!cleanEmail) {
+            return res.status(400).send({ message: "email is required" })
         }
 
-        // pattern validation
-        if (!emailPattern.test(email.toLowerCase())) {
-            return res.status(400).send({
-                message: "email is invalid"
-            })
+        if (!emailPattern.test(cleanEmail)) {
+            return res.status(400).send({ message: "email is invalid" })
         }
 
-        // otp validation
-        if (!otp) {
-            return res.status(400).send({
-                message: "otp is required"
-            })
+        if (!cleanOtp) {
+            return res.status(400).send({ message: "otp is required" })
         }
 
-        // password validation
         if (!newPassword) {
-            return res.status(400).send({
-                message: "password is required"
-            })
+            return res.status(400).send({ message: "password is required" })
         }
 
-        // does otp exist for email
-        const existingOtp = await PasswordOtpModel.findOne({ email: email }).sort({ createdAt: -1 })
+        const existingOtp = await PasswordOtpModel.findOne({ email: cleanEmail }).sort({ createdAt: -1 })
 
         if (!existingOtp) {
-            return res.status(400).send({
-                message: "otp is invalid"
-            })
+            return res.status(400).send({ message: "otp is invalid or expired" })
         }
 
-        // is otp correct
-        const isOtpValid = await bcrypt.compare(otp, existingOtp.otpCodeHash)
+        const otpAgeMinutes = (Date.now() - new Date(existingOtp.createdAt).getTime()) / (1000 * 60)
+        if (otpAgeMinutes > 10) {
+            await PasswordOtpModel.deleteOne({ _id: existingOtp._id })
+            return res.status(400).send({ message: "otp is expired. Please request a new one." })
+        }
+
+        const isOtpValid = await bcrypt.compare(cleanOtp, existingOtp.otpCodeHash)
         if (!isOtpValid) {
-            return res.status(400).send({
-                message: "otp is invalid"
-            })
+            return res.status(400).send({ message: "otp is invalid" })
         }
 
         const passwordHash = await bcrypt.hash(newPassword, 12)
 
-        // mark email verified
-        await UserModel.updateOne({ email: email }, {
-            $set: {
-                password: passwordHash
-            }
-        })
+        const updateResult = await UserModel.updateOne(
+            { email: cleanEmail },
+            { $set: { password: passwordHash } }
+        )
 
-        return res.send({
-            message: "password updated"
-        })
+        if (updateResult.matchedCount === 0) {
+            return res.status(404).send({ message: "user with this email does not exist" })
+        }
+
+        await PasswordOtpModel.deleteMany({ email: cleanEmail })
+
+        return res.send({ message: "password updated successfully" })
 
     } catch (error) {
-        console.error(error);
-        return res.status(500).send({
-            message: "internal server error"
-        })
+        console.error("FORGOT_PASSWORD_COMPLETE_ERROR:", error);
+        return res.status(500).send({ message: "internal server error" })
     }
 })
-
 
 export default router

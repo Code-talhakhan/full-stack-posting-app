@@ -109,16 +109,8 @@ const Header = ({ hideSearch = false }) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-3">
           
-          {/* Logo & Navigation */}
+          {/* Logo & Desktop Navigation (Left Side) */}
           <div className="flex items-center gap-3 sm:gap-6">
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="sm:hidden p-2 text-gray-600 hover:text-[#851D52] hover:bg-white/50 rounded-lg transition-colors outline-none"
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-
             <Link 
               to="/" 
               className="flex items-center gap-2.5 cursor-pointer transition-transform active:scale-95 outline-none flex-shrink-0"
@@ -161,9 +153,9 @@ const Header = ({ hideSearch = false }) => {
             </nav>
           </div>
 
-          {/* DEBOUNCE SEARCH BAR (Conditional Display) */}
+          {/* DEBOUNCE SEARCH BAR */}
           {shouldShowSearch ? (
-            <div className="flex-1 max-w-xs sm:max-w-md mx-2 relative">
+            <div className="flex-1 max-w-xs sm:max-w-md mx-1 sm:mx-2 relative">
               <input
                 type="text"
                 placeholder="Search posts..."
@@ -187,8 +179,8 @@ const Header = ({ hideSearch = false }) => {
             <div className="flex-1"></div>
           )}
 
-          {/* Profile Section */}
-          <div className="flex items-center gap-3 relative flex-shrink-0">
+          {/* Profile Section & Mobile Menu Button (Right Side) */}
+          <div className="flex items-center gap-2 sm:gap-3 relative flex-shrink-0">
             <button 
               onClick={() => {
                 setIsDropdownOpen(!isDropdownOpen)
@@ -202,6 +194,18 @@ const Header = ({ hideSearch = false }) => {
                 alt="Profile" 
                 className="w-full h-full rounded-full object-cover"
               />
+            </button>
+
+            {/* Mobile Hamburger Button - Moved to Right */}
+            <button 
+              onClick={() => {
+                setIsMobileMenuOpen(!isMobileMenuOpen)
+                setIsDropdownOpen(false)
+              }}
+              className="sm:hidden p-2 text-gray-600 hover:text-[#851D52] hover:bg-gray-100/70 rounded-xl transition-colors outline-none cursor-pointer"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
 
             {isDropdownOpen && (
@@ -218,40 +222,40 @@ const Header = ({ hideSearch = false }) => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute top-14 right-0 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-1.5 z-50 overflow-hidden"
+                  className="absolute top-14 right-0 w-60 bg-white rounded-[24px] border border-black shadow-[0_10px_30px_rgba(0,0,0,0.08)] py-2 z-50 overflow-hidden"
                 >
                   <Link 
                     to="/profile"
                     onClick={() => setIsDropdownOpen(false)}
-                    className="block px-4 py-3 border-b border-gray-50 hover:bg-[#fdfafb] transition-colors outline-none select-none cursor-pointer"
+                    className="block px-5 py-3 border-b border-gray-100 hover:bg-[#fdfafb] transition-colors outline-none select-none cursor-pointer"
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
-                    <p className="text-gray-900 font-semibold text-[15px] truncate capitalize hover:text-[#851D52] transition-colors">
+                    <p className="text-[#1a1c29] font-medium text-[16px] truncate capitalize hover:text-[#851D52] transition-colors tracking-tight">
                       {firstName} {lastName}
                     </p>
-                    <p className="text-gray-500 text-[13px] truncate mt-0.5">
+                    <p className="text-gray-400 text-[13px] truncate mt-0.5 font-normal">
                       {email}
                     </p>
                   </Link>
 
-                  <div className="py-1.5">
+                  <div className="py-1">
                     <Link 
                       to="/profile"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors outline-none"
+                      className="flex items-center gap-3 px-5 py-2.5 text-[#2d3142] hover:bg-[#fdfafb] hover:text-[#851D52] transition-colors outline-none"
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      <User size={18} className="text-gray-500" strokeWidth={2} />
-                      <span className="text-[14px] font-medium">Your Profile</span>
+                      <User size={18} className="text-gray-500" strokeWidth={1.8} />
+                      <span className="text-[15px] font-normal">Your Profile</span>
                     </Link>
 
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors text-left outline-none cursor-pointer"
+                      className="w-full flex items-center gap-3 px-5 py-2.5 text-red-500 hover:bg-red-50 transition-colors text-left outline-none cursor-pointer"
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
-                      <LogOut size={18} strokeWidth={2} />
-                      <span className="text-[14px] font-medium">Sign out</span>
+                      <LogOut size={18} strokeWidth={1.8} />
+                      <span className="text-[15px] font-medium">Sign out</span>
                     </button>
                   </div>
                 </motion.div>
@@ -261,43 +265,76 @@ const Header = ({ hideSearch = false }) => {
           </div>
         </div>
 
-        {/* Mobile Navigation Dropdown */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="sm:hidden overflow-hidden border-t border-gray-100 bg-white/50 backdrop-blur-md rounded-b-2xl mx-[-16px] px-4"
-            >
-              <div className="py-3 flex flex-col gap-2">
-                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <motion.div 
-                    whileTap={{ scale: 0.95 }}
-                    className="p-3 rounded-xl flex items-center gap-3 select-none"
-                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
-                  >
-                    <Home size={20} strokeWidth={2.5} />
-                    <span className="font-medium" style={{ fontWeight: 600 }}>Feed</span>
-                  </motion.div>
-                </Link>
+       
+<AnimatePresence>
+  {isMobileMenuOpen && (
+    <motion.div
+      initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
+      animate={{ 
+        opacity: 1, 
+        height: "auto", 
+        scaleY: 1,
+        transition: {
+          height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+          opacity: { duration: 0.25, delay: 0.05 },
+          scaleY: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }
+        }
+      }}
+      exit={{ 
+        opacity: 0, 
+        height: 0, 
+        scaleY: 0.95,
+        transition: {
+          height: { duration: 0.25, ease: "easeInOut" },
+          opacity: { duration: 0.15 },
+          scaleY: { duration: 0.25 }
+        }
+      }}
+      style={{ transformOrigin: "top center" }}
+      className="sm:hidden overflow-hidden border-t border-gray-100 bg-white/95 backdrop-blur-md rounded-b-2xl mx-[-16px] px-4 shadow-xl"
+    >
+      <motion.div 
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -10, opacity: 0 }}
+        transition={{ duration: 0.2, delay: 0.1 }}
+        className="py-3 flex flex-col gap-2"
+      >
+        <Link 
+          to="/" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+          className="outline-none" 
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          <motion.div 
+            whileTap={{ scale: 0.97 }}
+            className="p-3 rounded-xl flex items-center gap-3 select-none"
+            style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
+          >
+            <Home size={20} strokeWidth={2.5} />
+            <span className="font-semibold text-sm">Feed</span>
+          </motion.div>
+        </Link>
 
-                <Link to="/chat" onClick={() => setIsMobileMenuOpen(false)} className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <motion.div 
-                    whileTap={{ scale: 0.95 }}
-                    className="p-3 rounded-xl flex items-center gap-3 select-none"
-                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
-                  >
-                    <MessageCircle size={20} strokeWidth={2.5} />
-                    <span className="font-medium" style={{ fontWeight: 600 }}>Chat</span>
-                  </motion.div>
-                </Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+        <Link 
+          to="/chat" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+          className="outline-none" 
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          <motion.div 
+            whileTap={{ scale: 0.97 }}
+            className="p-3 rounded-xl flex items-center gap-3 select-none"
+            style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
+          >
+            <MessageCircle size={20} strokeWidth={2.5} />
+            <span className="font-semibold text-sm">Chat</span>
+          </motion.div>
+        </Link>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
       </div>
     </motion.header>
   )
