@@ -10,6 +10,7 @@ import ForgotPassword from "./pages/ForgotPassword.jsx"
 import ResetPassword from "./pages/ResetPassword.jsx"
 import Profile from "./pages/Profile"
 import SinglePostPage from "./pages/SinglePostPage.jsx"
+import Welcome from "./pages/Welcome.jsx" 
 import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
@@ -74,11 +75,13 @@ const App = () => {
         {/* LOGGED OUT USERS */}
         {isLogin === false && (
           <>
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* Direct unauthenticated users to /welcome first */}
+            <Route path="*" element={<Navigate to="/welcome" replace />} />
           </>
         )}
 
