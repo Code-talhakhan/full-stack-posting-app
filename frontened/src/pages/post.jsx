@@ -14,7 +14,8 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
@@ -580,78 +581,99 @@ const Post = () => {
 
       
      {/* FIXED UI: Edit Post Modal (Seamless Top Rounded Border) */}
-      <AnimatePresence>
-        {editTarget && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={closeEditModal}
-          >
-            <div 
-              onClick={(e) => e.stopPropagation()} 
-              className="w-full max-w-md bg-white rounded-[28px] overflow-hidden shadow-2xl border border-gray-100 relative pt-3"
-            >
-              {/* BURGUNDY TOP BAR (Overlaps Top Corner Curve Completely) */}
-              <div className="absolute -top-1 left-0 right-0 h-3 bg-gradient-to-r from-[#4a0d33] via-[#851D52] to-[#e87163] z-10"></div>
-
-              <div className="p-6 pt-4">
-                <div className="flex justify-between items-center mb-5">
-                  <h3 className="font-bold text-[#5E1243] text-xl">Edit Post</h3>
-                  <button 
-                    onClick={closeEditModal}
-                    className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-500 ml-1">Title</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={(e) => set_editTitle(e.target.value)}
-                      className="w-full py-2.5 px-4 bg-[#fdfafb] border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/40 focus:border-transparent transition-all"
-                      placeholder="Post Title"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-500 ml-1">Description</label>
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => set_editDescription(e.target.value)}
-                      rows={4}
-                      className="w-full p-3.5 bg-[#fdfafb] border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#851D52]/40 focus:border-transparent transition-all resize-none leading-relaxed"
-                      placeholder="Post Description"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-3 mt-6">
-                  <button 
-                    onClick={closeEditModal} 
-                    disabled={saving} 
-                    className="flex-1 py-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-semibold transition-all cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={confirmEdit} 
-                    disabled={saving} 
-                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#5E1243] to-[#851D52] hover:opacity-90 text-white text-sm font-semibold shadow-lg shadow-[#851D52]/20 transition-all cursor-pointer"
-                  >
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-              </div>
+     <AnimatePresence>
+  {editTarget && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+      onClick={closeEditModal}
+    >
+      <motion.div 
+        initial={{ scale: 0.96, opacity: 0, y: 10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.96, opacity: 0, y: 10 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        onClick={(e) => e.stopPropagation()} 
+        className="w-full max-w-lg bg-white rounded-[32px] p-8 shadow-xl border border-gray-100/80 relative"
+      >
+        {/* HEADER SECTION */}
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3.5">
+            {/* Soft Pink Rounded Icon Box */}
+            <div className="w-12 h-12 rounded-2xl bg-[#f9f0f5] flex items-center justify-center text-[#5E1243] flex-shrink-0">
+              <FileText size={22} strokeWidth={2} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <div>
+              <h3 className="font-bold text-[#4a0d33] text-xl tracking-tight">
+                Edit Post
+              </h3>
+              <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
+                Update your post title and description
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={closeEditModal}
+            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer outline-none"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* INPUT FIELDS */}
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-500 ml-1">
+              Title
+            </label>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => set_editTitle(e.target.value)}
+              className="w-full py-3.5 px-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all"
+              placeholder="Post Title"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-500 ml-1">
+              Description
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => set_editDescription(e.target.value)}
+              rows={4}
+              className="w-full p-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all resize-none leading-relaxed"
+              placeholder="Write description here..."
+            />
+          </div>
+        </div>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex items-center gap-3 mt-8">
+          <button 
+            onClick={closeEditModal} 
+            disabled={saving} 
+            className="flex-1 py-3.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all cursor-pointer outline-none text-center"
+          >
+            Cancel
+          </button>
+          
+          <button 
+            onClick={confirmEdit} 
+            disabled={saving} 
+            className="flex-1 py-3.5 rounded-full bg-[#851D52] hover:bg-[#6e1844] text-white text-sm font-semibold shadow-md shadow-[#851D52]/20 transition-all cursor-pointer outline-none text-center"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   )
 }
