@@ -14,7 +14,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Loader2,
+  Loader,
   FileText
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -510,21 +510,23 @@ const Post = () => {
                   {searchQuery ? "Try searching with different keywords" : "Be the first one to share something!"}
                 </p>
               </div>
-            ) : null}
+            ) : null}   
+
 
             {/* SCROLL TARGET LOADER */}
-            <div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
-              {isFetchingMore ? (
-                <div className="flex items-center gap-2.5 bg-white px-5 py-2.5 rounded-full shadow-md border border-gray-100">
-                  <Loader2 className="w-5 h-5 text-[#851D52] animate-spin" />
-                  <span className="text-xs font-semibold text-gray-600">Loading more posts...</span>
-                </div>
-              ) : hasMore ? (
-                <div className="h-6 w-full"></div>
-              ) : posts.length > 5 ? (
-                <p className="text-xs text-gray-400 font-medium">No more posts to load</p>
-              ) : null}
-            </div>
+<div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
+  {isFetchingMore ? (
+    <div className="flex items-center justify-center p-3">
+      <Loader className="w-7 h-7 text-gray-500 animate-spin" />
+    </div>
+  ) : hasMore ? (
+    <div className="h-6 w-full"></div>
+  ) : posts.length > 5 ? (
+    <p className="text-xs text-gray-400 font-medium">No more posts to load</p>
+  ) : null}
+</div>
+
+ 
           </div>
         )}
       </main>

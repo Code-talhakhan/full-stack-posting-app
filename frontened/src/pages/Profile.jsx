@@ -163,6 +163,11 @@ const Profile = () => {
     set_editOpen(false)
   }
 
+  const closeDeleteModal = () => {
+    if (deleting) return
+    set_deleteTarget(null)
+  }
+
   const saveProfile = async () => {
     if (!editFirstname.trim()) {
       toast.error("First name is required")
@@ -307,14 +312,14 @@ const Profile = () => {
         document.execCommand("copy")
         document.body.removeChild(textArea)
       }
-      toast.success("Link copy to clipboard!", { style: toastStyle })
+      toast.success("Link copied to clipboard!", { style: toastStyle })
     } catch (err) {
       toast.error("Failed to copy link")
     }
   }
 
   // Delete Post Handler
-  const confirmDeletePost = async () => {
+  const confirmDelete = async () => {
     if (!deleteTarget) return
     try {
       set_deleting(true)
@@ -330,7 +335,6 @@ const Profile = () => {
     }
   }
 
-  // Edit Post Handler
   const confirmEditPost = async () => {
     if (!editTarget || !editTitle.trim() || !editDescription.trim()) {
       toast.error("Title and description are required")
@@ -358,7 +362,6 @@ const Profile = () => {
   if (loadingProfile && !viewUser) {
     return (
       <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20 flex flex-col">
-        {/* Search bar hidden during loading */}
         <Header hideSearch={true} />
         <div className="flex-1 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-[#851D52] border-t-transparent rounded-full animate-spin"></div>
@@ -369,7 +372,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F7FB] font-sans pb-20">
-      {/* Search bar explicitly hidden on Profile Page */}
       <Header hideSearch={true} />
 
       <main className="w-full max-w-2xl mx-auto px-4 sm:px-6 pt-8">
@@ -601,7 +603,7 @@ const Profile = () => {
                           </p>
                         </div>
 
-                        {/* Clean Image Frame Matching Post.jsx */}
+                        {/* Image Frame */}
                         {postImage && (
                           <div className="w-full rounded-[18px] overflow-hidden border border-gray-100 bg-black/5 my-3">
                             <img 
@@ -676,229 +678,321 @@ const Profile = () => {
       />
 
       {/* Edit Profile Modal */}
-     <AnimatePresence>
-  {editOpen && isOwnProfile && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={closeEditModal}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
-      >
-        {/* Header Section with Icon Badge */}
-        <div className="flex justify-between items-start mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
-              <User size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
-                Edit Profile
-              </h3>
-              <p className="text-xs text-gray-500 font-normal mt-0.5">
-                Update your personal information
-              </p>
-            </div>
-          </div>
-          <button 
+      <AnimatePresence>
+        {editOpen && isOwnProfile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             onClick={closeEditModal}
-            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
           >
-            <X size={18} />
-          </button>
-        </div>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
+            >
+              <div className="flex justify-between items-start mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
+                    <User size={22} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
+                      Edit Profile
+                    </h3>
+                    <p className="text-xs text-gray-500 font-normal mt-0.5">
+                      Update your personal information
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={closeEditModal}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-        {/* Form Inputs */}
-        <div className="space-y-4">
-          <Input 
-            label="First name" 
-            value={editFirstname} 
-            onChange={(e) => set_editFirstname(e.target.value)} 
-          />
-          <Input 
-            label="Last name" 
-            value={editLastname} 
-            onChange={(e) => set_editLastname(e.target.value)} 
-          />
-        </div>
+              <div className="space-y-4">
+                <Input 
+                  label="First name" 
+                  value={editFirstname} 
+                  onChange={(e) => set_editFirstname(e.target.value)} 
+                />
+                <Input 
+                  label="Last name" 
+                  value={editLastname} 
+                  onChange={(e) => set_editLastname(e.target.value)} 
+                />
+              </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 mt-7">
-          <button
-            type="button"
-            onClick={closeEditModal}
-            disabled={savingName}
-            className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          
-          <button
-            type="button"
-            onClick={saveProfile}
-            disabled={savingName}
-            className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {savingName ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                <span>Saving...</span>
-              </>
-            ) : (
-              "Save Changes"
-            )}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+              <div className="flex items-center gap-3 mt-7">
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  disabled={savingName}
+                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={saveProfile}
+                  disabled={savingName}
+                  className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {savingName ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Security Modal */}
       <AnimatePresence>
-  {securityOpen && isOwnProfile && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={closeSecurityModal}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
-      >
-        {/* Header Section */}
-        <div className="flex justify-between items-start mb-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
-              <ShieldCheck size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
-                Security Settings
-              </h3>
-              <p className="text-xs text-gray-500 font-normal mt-0.5">
-                Update your account password
-              </p>
-            </div>
-          </div>
-          <button 
+        {securityOpen && isOwnProfile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             onClick={closeSecurityModal}
-            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
           >
-            <X size={18} />
-          </button>
-        </div>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-[28px] p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 relative"
+            >
+              <div className="flex justify-between items-start mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#851D52]/10 flex items-center justify-center text-[#851D52]">
+                    <ShieldCheck size={22} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-[#4a0d33] tracking-tight">
+                      Security Settings
+                    </h3>
+                    <p className="text-xs text-gray-500 font-normal mt-0.5">
+                      Update your account password
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={closeSecurityModal}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-        {/* Inputs */}
-        <div className="space-y-4">
-          <Input 
-            label="Current Password" 
-            isPassword 
-            value={current_password} 
-            onChange={(e) => set_current_password(e.target.value)} 
-          />
+              <div className="space-y-4">
+                <Input 
+                  label="Current Password" 
+                  isPassword 
+                  value={current_password} 
+                  onChange={(e) => set_current_password(e.target.value)} 
+                />
 
-          <Input 
-            label="New Password" 
-            isPassword 
-            value={new_password} 
-            onChange={(e) => set_new_password(e.target.value)} 
-          />
-          
-          <Input 
-            label="Confirm New Password" 
-            isPassword 
-            value={rep_password} 
-            onChange={(e) => set_rep_password(e.target.value)} 
-          />
-        </div>
+                <Input 
+                  label="New Password" 
+                  isPassword 
+                  value={new_password} 
+                  onChange={(e) => set_new_password(e.target.value)} 
+                />
+                
+                <Input 
+                  label="Confirm New Password" 
+                  isPassword 
+                  value={rep_password} 
+                  onChange={(e) => set_rep_password(e.target.value)} 
+                />
+              </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-3 mt-7">
-          <button
-            type="button"
-            onClick={closeSecurityModal}
-            disabled={savingPassword}
-            className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          
-          <button
-            type="button"
-            onClick={updatePassword}
-            disabled={savingPassword}
-            className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
-          >
-            {savingPassword ? (
-              <>
-                <Loader2 className="animate-spin" size={18} />
-                <span>Updating...</span>
-              </>
-            ) : (
-              "Update Password"
-            )}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+              <div className="flex items-center gap-3 mt-7">
+                <button
+                  type="button"
+                  onClick={closeSecurityModal}
+                  disabled={savingPassword}
+                  className="flex-1 py-3 rounded-2xl border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 text-sm font-semibold transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={updatePassword}
+                  disabled={savingPassword}
+                  className="flex-1 py-3 rounded-2xl bg-[#851D52] hover:bg-[#721845] active:scale-[0.99] text-white text-sm font-semibold transition-all shadow-md shadow-[#851D52]/20 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {savingPassword ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Post Modal */}
       <AnimatePresence>
         {deleteTarget && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="w-full max-w-sm bg-white rounded-[24px] p-6 text-center shadow-2xl">
-              <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-gray-900">Delete this post?</h3>
-              <p className="text-xs text-gray-500 mb-6">This action cannot be undone.</p>
-              <div className="flex gap-3">
-                <button onClick={() => set_deleteTarget(null)} className="flex-1 py-2 rounded-xl border text-sm">Cancel</button>
-                <button onClick={confirmDeletePost} className="flex-1 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+            onClick={closeDeleteModal}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()} 
+              className="w-full max-w-sm bg-white rounded-[32px] p-7 text-center shadow-xl border border-gray-100/80 relative"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-7 h-7" strokeWidth={2} />
+              </div>
+
+              <h3 className="text-xl font-bold text-[#111827] mb-1 tracking-tight">
+                Delete this post?
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-400 mb-7">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={closeDeleteModal} 
+                  disabled={deleting} 
+                  className="flex-1 py-3.5 rounded-2xl border border-gray-200/80 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all cursor-pointer outline-none"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete} 
+                  disabled={deleting} 
+                  className="flex-1 py-3.5 rounded-2xl bg-[#e60000] hover:bg-[#cc0000] text-white text-sm font-semibold shadow-md shadow-red-500/20 transition-all cursor-pointer outline-none"
+                >
                   {deleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
       {/* Edit Post Modal */}
       <AnimatePresence>
         {editTarget && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-white rounded-[24px] p-6 shadow-2xl">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-gray-900 text-lg">Edit Post</h3>
-                <button onClick={() => set_editTarget(null)}><X className="w-5 h-5 text-gray-400" /></button>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+            onClick={() => !savingPost && set_editTarget(null)}
+          >
+            <motion.div 
+              initial={{ scale: 0.96, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()} 
+              className="w-full max-w-lg bg-white rounded-[32px] p-8 shadow-xl border border-gray-100/80 relative"
+            >
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#f9f0f5] flex items-center justify-center text-[#5E1243] flex-shrink-0">
+                    <FileText size={22} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#4a0d33] text-xl tracking-tight">
+                      Edit Post
+                    </h3>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
+                      Update your post title and description
+                    </p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => set_editTarget(null)}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer outline-none"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
+
               <div className="space-y-4">
-                <input type="text" value={editTitle} onChange={(e) => set_editTitle(e.target.value)} className="w-full p-3 bg-gray-50 border rounded-xl text-sm" />
-                <textarea value={editDescription} onChange={(e) => set_editDescription(e.target.value)} rows={4} className="w-full p-3 bg-gray-50 border rounded-xl text-sm resize-none" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => set_editTitle(e.target.value)}
+                    className="w-full py-3.5 px-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all"
+                    placeholder="Post Title"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => set_editDescription(e.target.value)}
+                    rows={4}
+                    className="w-full p-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all resize-none leading-relaxed"
+                    placeholder="Write description here..."
+                  />
+                </div>
               </div>
-              <div className="flex gap-3 mt-6">
-                <button onClick={() => set_editTarget(null)} className="flex-1 py-2.5 rounded-xl border text-sm">Cancel</button>
-                <button onClick={confirmEditPost} className="flex-1 py-2.5 rounded-xl bg-[#851D52] text-white text-sm font-semibold">
+
+              <div className="flex items-center gap-3 mt-8">
+                <button 
+                  onClick={() => set_editTarget(null)} 
+                  disabled={savingPost} 
+                  className="flex-1 py-3.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all cursor-pointer outline-none text-center"
+                >
+                  Cancel
+                </button>
+                
+                <button 
+                  onClick={confirmEditPost} 
+                  disabled={savingPost} 
+                  className="flex-1 py-3.5 rounded-full bg-[#851D52] hover:bg-[#6e1844] text-white text-sm font-semibold shadow-md shadow-[#851D52]/20 transition-all cursor-pointer outline-none text-center"
+                >
                   {savingPost ? "Saving..." : "Save Changes"}
                 </button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
