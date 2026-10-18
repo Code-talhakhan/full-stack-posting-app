@@ -1,10 +1,28 @@
 import express from "express"
-import { PostModel } from "../../models/index.mjs"
+import { PostModel, NotificationModel } from "../../models/index.mjs"
 import { isValidObjectId } from "mongoose"
 import { multerMiddleware } from "../../libs/multer.mjs"
 import { uploadOnCloudinary } from "../../libs/cloudinary.mjs"
 
 const router = express.Router()
+
+// Helper Function: Real-time Notification Emit karne ke liye
+const emitRealtimeNotification = async (req, notification) => {
+    try {
+        if (!req.io || !global.onlineUsers) return;
+
+        const recipientSocketId = global.onlineUsers.get(notification.recipient.toString());
+        if (recipientSocketId) {
+            const populatedNotification = await NotificationModel.findById(notification._id)
+                .populate("sender", "firstName lastName firstname lastname profilePicture profilepicture profilePic")
+                .populate("post", "title imageUrl");
+
+            req.io.to(recipientSocketId).emit("getNotification", populatedNotification);
+        }
+    } catch (err) {
+        console.error("Realtime Emit Error:", err);
+    }
+};
 
 // 1. CREATE POST
 router.post("/post", multerMiddleware.any(), async (req, res) => {
@@ -31,7 +49,6 @@ router.post("/post", multerMiddleware.any(), async (req, res) => {
             imageUrl: imageUrl
         })
 
-        // User profile picture aur names populate karein
         const populatedPost = await PostModel.findById(newPost._id)
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture profilePic")
 
@@ -76,7 +93,7 @@ router.get("/post", async (req, res) => {
     }
 })
 
-// 3. GET SINGLE POST BY ID (ISSUE RESOLVED - ADDED MISSING ROUTE)
+// 3. GET SINGLE POST BY ID
 router.get("/post/:postId", async (req, res) => {
     try {
         const { postId } = req.params
@@ -170,6 +187,7 @@ router.delete("/post/:postId", async (req, res) => {
             return res.status(403).send({ message: "unauthorized: you can only delete your own posts" });
         }
 
+        await NotificationModel.deleteMany({ post: postId });
         await PostModel.findByIdAndDelete(postId);
 
         return res.send({ message: "post deleted successfully", postId: postId });
@@ -179,7 +197,7 @@ router.delete("/post/:postId", async (req, res) => {
     }
 });
 
-// 6. LIKE / UNLIKE POST
+// 6. LIKE / UNLIKE POST WITH REALTIME EMIT & DEBUG LOGS
 router.post("/post/:postId/like", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -195,18 +213,46 @@ router.post("/post/:postId/like", async (req, res) => {
 
         const updatedPost = await PostModel.findByIdAndUpdate(postId, updateQuery, { new: true })
 
+        if (hasLiked) {
+            await NotificationModel.findOneAndDelete({
+                recipient: post.authorId,
+                sender: userId,
+                type: "like",
+                post: postId
+            });
+        } else {
+            console.log("POST AUTHOR:", post.authorId.toString());
+            console.log("LIKED BY USER:", userId.toString());
+
+            if (post.authorId.toString() !== userId.toString()) {
+                const newNotification = await NotificationModel.create({
+                    recipient: post.authorId,
+                    sender: userId,
+                    type: "like",
+                    post: postId
+                });
+
+                console.log("CREATED NOTIFICATION IN DB:", newNotification);
+
+                // REALTIME SOCKET EMIT
+                await emitRealtimeNotification(req, newNotification);
+            } else {
+                console.log("SKIPPED NOTIFICATION: User liked their own post.");
+            }
+        }
+
         return res.send({
             message: hasLiked ? "post unliked" : "post liked",
             liked: !hasLiked,
             likesCount: updatedPost.likes.length
         })
     } catch (error) {
-        console.error(error)
+        console.error("LIKE ERROR:", error)
         return res.status(500).send({ message: "internal server error" })
     }
 })
 
-// 7. ADD COMMENT TO POST
+// 7. ADD COMMENT TO POST WITH REALTIME EMIT
 router.post("/post/:postId/comment", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -229,6 +275,17 @@ router.post("/post/:postId/comment", async (req, res) => {
 
         await post.save()
 
+        if (post.authorId.toString() !== req.currentUser._id.toString()) {
+            const newNotification = await NotificationModel.create({
+                recipient: post.authorId,
+                sender: req.currentUser._id,
+                type: "comment",
+                post: postId
+            });
+
+            await emitRealtimeNotification(req, newNotification);
+        }
+
         const updatedPost = await PostModel.findById(postId)
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")
             .populate("comments.authorId", "firstName lastName firstname lastname profilePicture profilepicture")
@@ -238,12 +295,12 @@ router.post("/post/:postId/comment", async (req, res) => {
             data: updatedPost
         })
     } catch (error) {
-        console.error(error)
+        console.error("COMMENT ERROR:", error)
         return res.status(500).send({ message: "internal server error" })
     }
 })
 
-// 8. LIKE / UNLIKE COMMENT
+// 8. LIKE / UNLIKE COMMENT WITH REALTIME EMIT
 router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -274,6 +331,26 @@ router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
             { _id: postId, "comments._id": commentId },
             updateQuery
         );
+
+        if (hasLiked) {
+            await NotificationModel.findOneAndDelete({
+                recipient: comment.authorId,
+                sender: userId,
+                type: "like",
+                post: postId
+            });
+        } else {
+            if (comment.authorId.toString() !== userId.toString()) {
+                const newNotification = await NotificationModel.create({
+                    recipient: comment.authorId,
+                    sender: userId,
+                    type: "like",
+                    post: postId
+                });
+
+                await emitRealtimeNotification(req, newNotification);
+            }
+        }
 
         const updatedPost = await PostModel.findById(postId)
             .populate("authorId", "firstName lastName firstname lastname profilePicture profilepicture")

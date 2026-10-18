@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Home, User, LogOut, MessageSquare, MessageCircle, Menu, X, Search } from 'lucide-react'
 import axios from 'axios'
 import { store } from '../store/states'
+import { NotificationBell } from '../component/NotificationBell' // NotificationBell Component Import
 
 const baseUrl = "http://localhost:3001"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
@@ -26,7 +27,7 @@ const Header = ({ hideSearch = false }) => {
     email: "user@gmail.com" 
   })
 
-  // URL check: Agar route Single Post page par hai (/post/xyz), tab bhi search bar hide kar do
+  // URL check: Single Post route par search bar hide karne ke liye
   const isSinglePostRoute = location.pathname.startsWith('/post/')
   const shouldShowSearch = !hideSearch && !isSinglePostRoute
 
@@ -179,8 +180,13 @@ const Header = ({ hideSearch = false }) => {
             <div className="flex-1"></div>
           )}
 
-          {/* Profile Section & Mobile Menu Button (Right Side) */}
+          {/* Right Action Icons (Notification Bell + Profile) */}
           <div className="flex items-center gap-2 sm:gap-3 relative flex-shrink-0">
+            
+            {/* NOTIFICATION BELL INTEGRATED */}
+            <NotificationBell />
+
+            {/* Profile Avatar Button */}
             <button 
               onClick={() => {
                 setIsDropdownOpen(!isDropdownOpen)
@@ -196,7 +202,7 @@ const Header = ({ hideSearch = false }) => {
               />
             </button>
 
-            {/* Mobile Hamburger Button - Moved to Right */}
+            {/* Mobile Hamburger Button */}
             <button 
               onClick={() => {
                 setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -265,76 +271,76 @@ const Header = ({ hideSearch = false }) => {
           </div>
         </div>
 
-       
-<AnimatePresence>
-  {isMobileMenuOpen && (
-    <motion.div
-      initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
-      animate={{ 
-        opacity: 1, 
-        height: "auto", 
-        scaleY: 1,
-        transition: {
-          height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
-          opacity: { duration: 0.25, delay: 0.05 },
-          scaleY: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }
-        }
-      }}
-      exit={{ 
-        opacity: 0, 
-        height: 0, 
-        scaleY: 0.95,
-        transition: {
-          height: { duration: 0.25, ease: "easeInOut" },
-          opacity: { duration: 0.15 },
-          scaleY: { duration: 0.25 }
-        }
-      }}
-      style={{ transformOrigin: "top center" }}
-      className="sm:hidden overflow-hidden border-t border-gray-100 bg-white/95 backdrop-blur-md rounded-b-2xl mx-[-16px] px-4 shadow-xl"
-    >
-      <motion.div 
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -10, opacity: 0 }}
-        transition={{ duration: 0.2, delay: 0.1 }}
-        className="py-3 flex flex-col gap-2"
-      >
-        <Link 
-          to="/" 
-          onClick={() => setIsMobileMenuOpen(false)} 
-          className="outline-none" 
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <motion.div 
-            whileTap={{ scale: 0.97 }}
-            className="p-3 rounded-xl flex items-center gap-3 select-none"
-            style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
-          >
-            <Home size={20} strokeWidth={2.5} />
-            <span className="font-semibold text-sm">Feed</span>
-          </motion.div>
-        </Link>
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scaleY: 0.95 }}
+              animate={{ 
+                opacity: 1, 
+                height: "auto", 
+                scaleY: 1,
+                transition: {
+                  height: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] },
+                  opacity: { duration: 0.25, delay: 0.05 },
+                  scaleY: { duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }
+                }
+              }}
+              exit={{ 
+                opacity: 0, 
+                height: 0, 
+                scaleY: 0.95,
+                transition: {
+                  height: { duration: 0.25, ease: "easeInOut" },
+                  opacity: { duration: 0.15 },
+                  scaleY: { duration: 0.25 }
+                }
+              }}
+              style={{ transformOrigin: "top center" }}
+              className="sm:hidden overflow-hidden border-t border-gray-100 bg-white/95 backdrop-blur-md rounded-b-2xl mx-[-16px] px-4 shadow-xl"
+            >
+              <motion.div 
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -10, opacity: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                className="py-3 flex flex-col gap-2"
+              >
+                <Link 
+                  to="/" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="outline-none" 
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <motion.div 
+                    whileTap={{ scale: 0.97 }}
+                    className="p-3 rounded-xl flex items-center gap-3 select-none"
+                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
+                  >
+                    <Home size={20} strokeWidth={2.5} />
+                    <span className="font-semibold text-sm">Feed</span>
+                  </motion.div>
+                </Link>
 
-        <Link 
-          to="/chat" 
-          onClick={() => setIsMobileMenuOpen(false)} 
-          className="outline-none" 
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-        >
-          <motion.div 
-            whileTap={{ scale: 0.97 }}
-            className="p-3 rounded-xl flex items-center gap-3 select-none"
-            style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
-          >
-            <MessageCircle size={20} strokeWidth={2.5} />
-            <span className="font-semibold text-sm">Chat</span>
-          </motion.div>
-        </Link>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                <Link 
+                  to="/chat" 
+                  onClick={() => setIsMobileMenuOpen(false)} 
+                  className="outline-none" 
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <motion.div 
+                    whileTap={{ scale: 0.97 }}
+                    className="p-3 rounded-xl flex items-center gap-3 select-none"
+                    style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
+                  >
+                    <MessageCircle size={20} strokeWidth={2.5} />
+                    <span className="font-semibold text-sm">Chat</span>
+                  </motion.div>
+                </Link>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.header>
   )

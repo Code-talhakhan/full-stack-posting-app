@@ -15,6 +15,7 @@ import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
 import SplashScreen from "./component/SplashScreen"
+import { SocketProvider } from "./context/SocketContext" // 1. SocketProvider Import
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -27,7 +28,7 @@ axios.interceptors.request.use((config) => {
 });
 
 const App = () => {
-  const { global_login, global_logout, isLogin } = store()
+  const { global_login, global_logout, isLogin, user } = store() // user state destructure ki
 
   useEffect(() => {
     get_profile()
@@ -64,7 +65,8 @@ const App = () => {
   }
 
   return (
-    <>
+    // 2. Poori app ko SocketProvider se wrap kar diya
+    <SocketProvider currentUser={user}>
       <Toaster position="top-right" richColors />
 
       <Routes>
@@ -95,7 +97,7 @@ const App = () => {
           </>
         )}
       </Routes>
-    </>
+    </SocketProvider>
   )
 }
 
