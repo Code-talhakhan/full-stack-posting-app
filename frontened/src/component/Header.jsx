@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Home, User, LogOut, MessageSquare, MessageCircle, Menu, X, Search } from 'lucide-react'
 import axios from 'axios'
 import { store } from '../store/states'
-import { NotificationBell } from '../component/NotificationBell' // NotificationBell Component Import
+import { NotificationBell } from '../component/NotificationBell' 
 
 const baseUrl = "http://localhost:3001"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
@@ -148,7 +148,7 @@ const Header = ({ hideSearch = false }) => {
                   style={{ backgroundColor: '#ffffff', color: '#851D52' }}
                 >
                   <MessageCircle size={18} strokeWidth={2.5} />
-                  <span className="text-sm font-semibold">Chat</span>
+                  <span className="text-sm font-semibold">Bayan AI</span>
                 </motion.div>
               </Link>
             </nav>

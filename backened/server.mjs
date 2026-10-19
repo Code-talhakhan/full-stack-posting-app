@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import http from "http"; // 1. Node.js built-in HTTP module
 import { Server } from "socket.io"; // 2. Socket.io Server import
-import { postRoutes, authRoutes, profileRoutes, notificationRoutes } from "./routes/index.mjs";
+import { postRoutes, authRoutes, profileRoutes, notificationRoutes, agentRoutes  } from "./routes/index.mjs";
 import cors from "cors";
 import morgan from "morgan";
 import { connect_database } from "./libs/mongodb.mjs";
@@ -88,7 +88,8 @@ app.use("/api/v1", authRoutes);
 // Protected routes (JWT Auth Required - Har Route Module Separately Mount Hai)
 app.use("/api/v1", authGuardJWT, postRoutes);
 app.use("/api/v1", authGuardJWT, profileRoutes);
-app.use("/api/v1/notifications", authGuardJWT, notificationRoutes); // Fixed Notification Path
+app.use("/api/v1/notifications", authGuardJWT, notificationRoutes);
+app.use("/api/v1/agent", authGuardJWT, agentRoutes); // 4. AI Agent Route Mount (`/api/v1/agent/chat`)
 
 // Server Listen
 server.listen(PORT, () => {

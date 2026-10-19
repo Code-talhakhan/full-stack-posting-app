@@ -11,11 +11,12 @@ import ResetPassword from "./pages/ResetPassword.jsx"
 import Profile from "./pages/Profile"
 import SinglePostPage from "./pages/SinglePostPage.jsx"
 import Welcome from "./pages/Welcome.jsx" 
+import Chat from "./pages/Chat" // 1. Chat page import kiya
 import { Toaster } from 'sonner'
 import { baseUrl } from "./core"
 import { store } from "./store/states"
 import SplashScreen from "./component/SplashScreen"
-import { SocketProvider } from "./context/SocketContext" // 1. SocketProvider Import
+import { SocketProvider } from "./context/SocketContext"
 
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token"); 
@@ -28,7 +29,7 @@ axios.interceptors.request.use((config) => {
 });
 
 const App = () => {
-  const { global_login, global_logout, isLogin, user } = store() // user state destructure ki
+  const { global_login, global_logout, isLogin, user } = store()
 
   useEffect(() => {
     get_profile()
@@ -65,7 +66,6 @@ const App = () => {
   }
 
   return (
-    // 2. Poori app ko SocketProvider se wrap kar diya
     <SocketProvider currentUser={user}>
       <Toaster position="top-right" richColors />
 
@@ -82,7 +82,6 @@ const App = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            {/* Direct unauthenticated users to /welcome first */}
             <Route path="*" element={<Navigate to="/welcome" replace />} />
           </>
         )}
@@ -93,6 +92,7 @@ const App = () => {
             <Route path="/" element={<Posts />} />
             <Route path="/profile" element={<Profile />} /> 
             <Route path="/profile/:userId" element={<Profile />} /> 
+            <Route path="/chat" element={<Chat />} /> {/* 2. Chat Route Added */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         )}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Bell, Trash2 } from "lucide-react";
-import { Link } from "react-router-dom"; // 1. Link Component Import
+import { Link } from "react-router-dom";
 import { useSocket } from "../context/SocketContext";
 import { baseUrl } from "../core";
 
@@ -68,7 +68,7 @@ export const NotificationBell = () => {
 
     // Single Notification Delete Handler
     const handleDelete = async (e, notificationId) => {
-        e.stopPropagation(); // Profile redirect ya dropdown close rokne ke liye
+        e.stopPropagation();
         try {
             const token = localStorage.getItem("token");
             await axios.delete(`${baseUrl}/api/v1/notifications/${notificationId}`, {
@@ -78,7 +78,6 @@ export const NotificationBell = () => {
                 }
             });
 
-            // UI se remove karein
             setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
         } catch (err) {
             console.error("Delete Notification Error:", err);
@@ -103,11 +102,11 @@ export const NotificationBell = () => {
                 )}
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Fully Mobile Responsive */}
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl bg-white border border-gray-100 shadow-2xl z-50 p-3 space-y-2">
+                    <div className="fixed sm:absolute right-4 sm:right-0 top-16 sm:top-auto sm:mt-2 w-[calc(100vw-2rem)] sm:w-80 max-h-[80vh] sm:max-h-96 overflow-y-auto rounded-2xl bg-white border border-gray-100 shadow-2xl z-50 p-3 space-y-2">
                         <div className="flex items-center justify-between border-b border-gray-100 pb-2 px-1">
                             <h3 className="text-gray-800 font-bold text-sm">Notifications</h3>
                             <span className="text-[11px] text-gray-400">{notifications.length} Total</span>
@@ -134,7 +133,6 @@ export const NotificationBell = () => {
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            {/* Profile Link on Avatar & Name */}
                                             <Link 
                                                 to={`/profile/${senderId}`} 
                                                 onClick={() => setIsOpen(false)}
@@ -160,10 +158,9 @@ export const NotificationBell = () => {
                                             </Link>
                                         </div>
 
-                                        {/* Single Delete Button */}
                                         <button
                                             onClick={(e) => handleDelete(e, notif._id)}
-                                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all outline-none cursor-pointer flex-shrink-0"
+                                            className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all outline-none cursor-pointer flex-shrink-0"
                                             title="Delete notification"
                                         >
                                             <Trash2 size={15} />
