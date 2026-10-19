@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Home, User, LogOut, MessageSquare, Sparkles, Menu, X, Search } from 'lucide-react'
+import { Home, User, LogOut, Sparkles, Menu, X, Search } from 'lucide-react'
+import logo from "../assets/bayan-logo.png"
 import axios from 'axios'
 import { store } from '../store/states'
 import { NotificationBell } from '../component/NotificationBell' 
+import { baseUrl } from '../core'
 
-const baseUrl = "http://localhost:3001"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
 
 const Header = ({ hideSearch = false }) => {
@@ -114,12 +115,14 @@ const Header = ({ hideSearch = false }) => {
           <div className="flex items-center gap-3 sm:gap-6">
             <Link 
               to="/" 
-              className="flex items-center gap-2.5 cursor-pointer transition-transform active:scale-95 outline-none flex-shrink-0"
+              className="flex items-center gap-1 cursor-pointer transition-transform active:scale-95 outline-none flex-shrink-0"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex items-center justify-center shadow-lg shadow-[#851D52]/30">
-                <MessageSquare size={18} className="text-white" strokeWidth={2.5} />
-              </div>
+              <img 
+                src={logo} 
+                alt="Bayan Logo" 
+                className="w-9 h-9 object-contain flex-shrink-0" 
+              />
               <span 
                 className="hidden sm:block text-2xl font-black bg-gradient-to-r from-[#4a0d33] to-[#851D52] text-transparent bg-clip-text select-none"
                 style={{ fontFamily: "'Poppins', 'Outfit', 'Montserrat', system-ui, sans-serif", letterSpacing: "0.5px" }}
@@ -147,7 +150,6 @@ const Header = ({ hideSearch = false }) => {
                   className="px-3.5 py-2 rounded-xl flex items-center gap-2 select-none"
                   style={{ backgroundColor: '#ffffff', color: '#851D52' }}
                 >
-                  {/* Updated AI Sparkles Icon for Bayan AI Agent */}
                   <Sparkles size={18} strokeWidth={2.5} className="fill-[#851D52]/10" />
                   <span className="text-sm font-semibold">Bayan AI</span>
                 </motion.div>
@@ -334,7 +336,6 @@ const Header = ({ hideSearch = false }) => {
                     className="p-3 rounded-xl flex items-center gap-3 select-none"
                     style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
                   >
-                    {/* Mobile Menu Icon Updated */}
                     <Sparkles size={20} strokeWidth={2.5} className="fill-[#851D52]/10" />
                     <span className="font-semibold text-sm">Bayan AI</span>
                   </motion.div>

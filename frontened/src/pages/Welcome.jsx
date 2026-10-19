@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import logo from "../assets/bayan-logo.png"
 import { 
   MessageSquare, 
   Sparkles, 
@@ -10,7 +11,8 @@ import {
   ArrowRight, 
   Heart, 
   MessageCircle, 
-  Share2 
+  Share2,
+  Bot 
 } from 'lucide-react'
 
 const Welcome = () => {
@@ -23,12 +25,15 @@ const Welcome = () => {
 
       {/* Top Header / Navigation Bar */}
       <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex items-center justify-center shadow-lg shadow-[#851D52]/30 group-hover:scale-105 transition-transform duration-300">
-            <MessageSquare size={20} className="text-white" strokeWidth={2.5} />
-          </div>
+        <Link to="/" className="flex items-center gap-2 group">
+          {/* Custom Logo Image with Soft Drop Shadow */}
+          <img 
+            src={logo} 
+            alt="Bayan Logo" 
+            className="w-10 h-10 object-contain flex-shrink-0 drop-shadow-[0_8px_16px_rgba(133,29,82,0.35)] group-hover:scale-105 transition-transform duration-300"
+          />
           <span 
-            className="text-2xl font-black bg-gradient-to-r from-[#4a0d33] to-[#851D52] text-transparent bg-clip-text tracking-tight"
+            className="text-2xl font-black bg-gradient-to-r from-[#4a0d33] to-[#851D52] text-transparent bg-clip-text tracking-tight select-none"
             style={{ fontFamily: "'Poppins', 'Outfit', system-ui, sans-serif" }}
           >
             Bayan
@@ -219,11 +224,11 @@ const Welcome = () => {
 
           <div className="p-6 rounded-3xl bg-white/70 backdrop-blur-md border border-gray-100 shadow-sm hover:shadow-md transition-all">
             <div className="w-12 h-12 rounded-2xl bg-[#851D52]/10 text-[#851D52] flex items-center justify-center mb-4">
-              <MessageCircle size={22} />
+              <Bot size={22} />
             </div>
-            <h3 className="text-lg font-bold text-[#3d0a2a] mb-1">Realtime Chat</h3>
+            <h3 className="text-lg font-bold text-[#3d0a2a] mb-1">Bayan AI Assistant</h3>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Direct message your friends with seamless messaging and live presence indicators.
+              Brainstorm ideas, design creative posts, and navigate the platform with your AI companion.
             </p>
           </div>
 
