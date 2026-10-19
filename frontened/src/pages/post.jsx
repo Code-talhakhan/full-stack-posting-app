@@ -18,10 +18,10 @@ import {
   FileText
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
 import Header from "../component/Header"
 import CommentModal from "../component/CommentModal"
 import { store } from '../store/states'
+import showToast from '../component/CustomToast'
 
 const API_URL = "http://localhost:3001/api/v1/post"
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
@@ -123,9 +123,9 @@ const Post = () => {
       setHasMore(false)
 
       if (error?.response?.status === 429) {
-        toast.error("Slow down! Too many requests.", { id: "rate-limit-toast" })
+        showToast.error("Slow down! Too many requests.")
       } else if (isInitial) {
-        toast.error("Failed to load posts")
+        showToast.error("Failed to load posts")
       }
     } finally {
       setLoading(false)
@@ -188,7 +188,7 @@ const Post = () => {
 
   const handleLike = async (postId) => {
     if (!currentUserId) {
-      toast.error("Please login first")
+      showToast.error("Please login first")
       return
     }
 
@@ -211,7 +211,7 @@ const Post = () => {
     } catch (error) {
       setLikedPosts(prev => ({ ...prev, [postId]: isCurrentlyLiked }))
       setLikeCounts(prev => ({ ...prev, [postId]: currentCount }))
-      toast.error("Failed to update like status")
+      showToast.error("Failed to update like status")
     }
   }
 
@@ -230,15 +230,9 @@ const Post = () => {
         document.body.removeChild(textArea)
       }
 
-      toast.success("Link copied to clipboard!", {
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+      showToast.success("Link copied to clipboard!")
     } catch (err) {
-      toast.error("Failed to copy link")
+      showToast.error("Failed to copy link")
     }
   }
 
@@ -260,12 +254,12 @@ const Post = () => {
         headers: getAuthHeaders()
       })
       
-      toast.success(resp?.data?.message || "Post deleted")
+      showToast.success(resp?.data?.message || "Post deleted")
       set_deleteTarget(null)
       fetchPosts(1, true)
     } catch (error) {
       console.error("Delete Error:", error?.response?.data || error)
-      toast.error(error?.response?.data?.message || "Failed to delete post")
+      showToast.error(error?.response?.data?.message || "Failed to delete post")
     } finally {
       set_deleting(false)
     }
@@ -289,7 +283,7 @@ const Post = () => {
     if (!editTarget) return
 
     if (!editTitle.trim() || !editDescription.trim()) {
-      toast.error("Title and description are required")
+      showToast.error("Title and description are required")
       return
     }
 
@@ -302,12 +296,12 @@ const Post = () => {
         headers: getAuthHeaders()
       })
       
-      toast.success(resp?.data?.message || "Post updated")
+      showToast.success(resp?.data?.message || "Post updated")
       closeEditModal()
       fetchPosts(1, true)
     } catch (error) {
       console.error("Edit Error:", error?.response?.data || error)
-      toast.error(error?.response?.data?.message || "Failed to update post")
+      showToast.error(error?.response?.data?.message || "Failed to update post")
     } finally {
       set_saving(false)
     }
@@ -514,19 +508,18 @@ const Post = () => {
 
 
             {/* SCROLL TARGET LOADER */}
-<div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
-  {isFetchingMore ? (
-    <div className="flex items-center justify-center p-3">
-      <Loader className="w-7 h-7 text-gray-500 animate-spin" />
-    </div>
-  ) : hasMore ? (
-    <div className="h-6 w-full"></div>
-  ) : posts.length > 5 ? (
-    <p className="text-xs text-gray-400 font-medium">No more posts to load</p>
-  ) : null}
-</div>
+            <div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
+              {isFetchingMore ? (
+                <div className="flex items-center justify-center p-3">
+                  <Loader className="w-7 h-7 text-gray-500 animate-spin" />
+                </div>
+              ) : hasMore ? (
+                <div className="h-6 w-full"></div>
+              ) : posts.length > 5 ? (
+                <p className="text-xs text-gray-400 font-medium">No more posts to load</p>
+              ) : null}
+            </div>
 
- 
           </div>
         )}
       </main>
@@ -541,7 +534,7 @@ const Post = () => {
         onPostUpdated={() => fetchPosts(1, true)}
       />
 
-      {/* FIXED UI: Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteTarget && (
           <motion.div
@@ -582,100 +575,99 @@ const Post = () => {
       </AnimatePresence>
 
       
-     {/* FIXED UI: Edit Post Modal (Seamless Top Rounded Border) */}
-     <AnimatePresence>
-  {editTarget && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
-      onClick={closeEditModal}
-    >
-      <motion.div 
-        initial={{ scale: 0.96, opacity: 0, y: 10 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.96, opacity: 0, y: 10 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
-        onClick={(e) => e.stopPropagation()} 
-        className="w-full max-w-lg bg-white rounded-[32px] p-8 shadow-xl border border-gray-100/80 relative"
-      >
-        {/* HEADER SECTION */}
-        <div className="flex items-start justify-between gap-4 mb-6">
-          <div className="flex items-center gap-3.5">
-            {/* Soft Pink Rounded Icon Box */}
-            <div className="w-12 h-12 rounded-2xl bg-[#f9f0f5] flex items-center justify-center text-[#5E1243] flex-shrink-0">
-              <FileText size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="font-bold text-[#4a0d33] text-xl tracking-tight">
-                Edit Post
-              </h3>
-              <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
-                Update your post title and description
-              </p>
-            </div>
-          </div>
-
-          <button 
+      {/* Edit Post Modal */}
+      <AnimatePresence>
+        {editTarget && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
             onClick={closeEditModal}
-            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer outline-none"
           >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+            <motion.div 
+              initial={{ scale: 0.96, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()} 
+              className="w-full max-w-lg bg-white rounded-[32px] p-8 shadow-xl border border-gray-100/80 relative"
+            >
+              {/* HEADER SECTION */}
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#f9f0f5] flex items-center justify-center text-[#5E1243] flex-shrink-0">
+                    <FileText size={22} strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#4a0d33] text-xl tracking-tight">
+                      Edit Post
+                    </h3>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5">
+                      Update your post title and description
+                    </p>
+                  </div>
+                </div>
 
-        {/* INPUT FIELDS */}
-        <div className="space-y-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 ml-1">
-              Title
-            </label>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => set_editTitle(e.target.value)}
-              className="w-full py-3.5 px-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all"
-              placeholder="Post Title"
-            />
-          </div>
+                <button 
+                  onClick={closeEditModal}
+                  className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer outline-none"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 ml-1">
-              Description
-            </label>
-            <textarea
-              value={editDescription}
-              onChange={(e) => set_editDescription(e.target.value)}
-              rows={4}
-              className="w-full p-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all resize-none leading-relaxed"
-              placeholder="Write description here..."
-            />
-          </div>
-        </div>
+              {/* INPUT FIELDS */}
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => set_editTitle(e.target.value)}
+                    className="w-full py-3.5 px-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all"
+                    placeholder="Post Title"
+                  />
+                </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex items-center gap-3 mt-8">
-          <button 
-            onClick={closeEditModal} 
-            disabled={saving} 
-            className="flex-1 py-3.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all cursor-pointer outline-none text-center"
-          >
-            Cancel
-          </button>
-          
-          <button 
-            onClick={confirmEdit} 
-            disabled={saving} 
-            className="flex-1 py-3.5 rounded-full bg-[#851D52] hover:bg-[#6e1844] text-white text-sm font-semibold shadow-md shadow-[#851D52]/20 transition-all cursor-pointer outline-none text-center"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-gray-500 ml-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={editDescription}
+                    onChange={(e) => set_editDescription(e.target.value)}
+                    rows={4}
+                    className="w-full p-4 bg-[#fdfafb] border border-gray-200/80 rounded-2xl text-gray-800 placeholder-gray-400 text-sm focus:outline-none focus:bg-white focus:border-[#851D52] transition-all resize-none leading-relaxed"
+                    placeholder="Write description here..."
+                  />
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="flex items-center gap-3 mt-8">
+                <button 
+                  onClick={closeEditModal} 
+                  disabled={saving} 
+                  className="flex-1 py-3.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-all cursor-pointer outline-none text-center"
+                >
+                  Cancel
+                </button>
+                
+                <button 
+                  onClick={confirmEdit} 
+                  disabled={saving} 
+                  className="flex-1 py-3.5 rounded-full bg-[#851D52] hover:bg-[#6e1844] text-white text-sm font-semibold shadow-md shadow-[#851D52]/20 transition-all cursor-pointer outline-none text-center"
+                >
+                  {saving ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

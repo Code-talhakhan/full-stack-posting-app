@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Home, User, LogOut, MessageSquare, MessageCircle, Menu, X, Search } from 'lucide-react'
+import { Home, User, LogOut, MessageSquare, Sparkles, Menu, X, Search } from 'lucide-react'
 import axios from 'axios'
 import { store } from '../store/states'
 import { NotificationBell } from '../component/NotificationBell' 
@@ -147,7 +147,8 @@ const Header = ({ hideSearch = false }) => {
                   className="px-3.5 py-2 rounded-xl flex items-center gap-2 select-none"
                   style={{ backgroundColor: '#ffffff', color: '#851D52' }}
                 >
-                  <MessageCircle size={18} strokeWidth={2.5} />
+                  {/* Updated AI Sparkles Icon for Bayan AI Agent */}
+                  <Sparkles size={18} strokeWidth={2.5} className="fill-[#851D52]/10" />
                   <span className="text-sm font-semibold">Bayan AI</span>
                 </motion.div>
               </Link>
@@ -333,8 +334,9 @@ const Header = ({ hideSearch = false }) => {
                     className="p-3 rounded-xl flex items-center gap-3 select-none"
                     style={{ backgroundColor: '#fdfafb', color: '#851D52' }}
                   >
-                    <MessageCircle size={20} strokeWidth={2.5} />
-                    <span className="font-semibold text-sm">Chat</span>
+                    {/* Mobile Menu Icon Updated */}
+                    <Sparkles size={20} strokeWidth={2.5} className="fill-[#851D52]/10" />
+                    <span className="font-semibold text-sm">Bayan AI</span>
                   </motion.div>
                 </Link>
               </motion.div>

@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react'
 import axios from 'axios'
 import { PlusCircle, Type, FileText, Image, X } from 'lucide-react'
 import { toast } from 'sonner'
+import showToast from './CustomToast'
 
 const API_URL = 'http://localhost:3001/api/v1/post'
 
@@ -36,7 +37,7 @@ export default function Form({ getAllPosts }) {
     console.log("Submit clicked. Title:", title, "Desc:", description, "File:", imageFile)
 
     if (!title.trim() || !description.trim()) {
-      toast.error('Please fill in Title and Description!')
+      showToast.error('Please fill in Title and Description!')
       return
     }
 
@@ -61,18 +62,17 @@ export default function Form({ getAllPosts }) {
 
       console.log("Post Response:", response.data)
 
-      // Clear Form Fields After Success
       setTitle('')
       setDescription('')
       removeImage()
 
-      // Refresh Feed Posts
       if (getAllPosts) getAllPosts()
 
-      toast.success('Post created successfully!')
+      // Reusable CustomToast Component call
+      showToast.success('Post created successfully!')
     } catch (error) {
       console.error('Error adding post:', error)
-      toast.error(error?.response?.data?.message || 'Failed to create post!')
+      showToast.error(error?.response?.data?.message || 'Failed to create post!')
     } finally {
       setSubmitting(false)
     }
