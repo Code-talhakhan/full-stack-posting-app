@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import moment from 'moment'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
 import { X, Heart, MessageCircle, Send, Loader2 } from 'lucide-react'
 import { baseUrl } from '../core'
+import showToast from '../component/CustomToast'
 
 const API_POST_URL = `${baseUrl}/api/v1/post`
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
@@ -13,10 +13,9 @@ const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS7
 const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, likedPosts, likeCounts }) => {
   const [modalCommentText, setModalCommentText] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
-  // Instant render ke liye local state
   const [commentsList, setCommentsList] = useState([])
 
-  // Jab bhi selectedPost update ya set ho, local comments sync karein
+  // Re-sync local comments list when selectedPost changes
   useEffect(() => {
     if (selectedPost) {
       setCommentsList(selectedPost?.comments || [])
@@ -35,12 +34,29 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                  || (typeof selectedPost?.files === 'string' ? selectedPost?.files : selectedPost?.files?.[0]) 
                  || null;
 
-  // Add Comment API Call with Instant Optimistic UI Update
+  // Optimistic Add Comment
   const handleAddComment = async () => {
     if (!modalCommentText.trim() || submittingComment) return
 
     const commentContent = modalCommentText.trim()
-    setModalCommentText("") // Input reset
+    setModalCommentText("") // Reset input field instantly
+
+    // Temporary Optimistic Comment
+    const tempComment = {
+      _id: Date.now().toString(),
+      text: commentContent,
+      content: commentContent,
+      createdAt: new Date().toISOString(),
+      author: {
+        _id: currentUserId,
+        firstname: "You",
+        profilePicture: DEFAULT_AVATAR
+      },
+      likes: []
+    }
+
+    const previousComments = [...commentsList]
+    setCommentsList(prev => [tempComment, ...prev])
 
     try {
       setSubmittingComment(true)
@@ -50,49 +66,56 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
       const resp = await axios.post(`${API_POST_URL}/${postId}/comment`, {
         text: commentContent
       }, {
-        headers: { 
-          token: cleanToken,
-          Authorization: `Bearer ${cleanToken}`
-        }
+        headers: { token: cleanToken }
       })
 
-      // Backend response se updated post ya comment data lekar local state instant update karein
       const updatedPost = resp.data?.data || resp.data?.post
-      if (updatedPost) {
-        if (updatedPost.comments) {
-          setCommentsList(updatedPost.comments)
-        }
+      if (updatedPost && updatedPost.comments) {
+        setCommentsList(updatedPost.comments)
         if (onPostUpdated) onPostUpdated(updatedPost)
-        toast.success("Comment posted")
-      } else {
-        // Fallback: Re-sync
-        if (onPostUpdated) onPostUpdated()
       }
+      showToast.success("Comment posted")
     } catch (error) {
       console.error("Error adding comment:", error)
-      toast.error(error?.response?.data?.message || "Failed to add comment")
-      setModalCommentText(commentContent) // Error par text wapas restore karein
+      showToast.error(error?.response?.data?.message || "Failed to add comment")
+      setCommentsList(previousComments) // Rollback on error
+      setModalCommentText(commentContent)
     } finally {
       setSubmittingComment(false)
     }
   }
 
-  // Toggle Comment Like API Call
+  // Optimistic Toggle Comment Like
   const handleToggleCommentLike = async (commentId) => {
     if (!currentUserId) {
-      toast.error("Please login first")
+      showToast.error("Please login first")
       return
     }
+
+    const previousComments = [...commentsList]
+
+    // Optimistic Update
+    setCommentsList(prevComments =>
+      prevComments.map(comment => {
+        if (comment._id === commentId) {
+          const likesArr = comment.likes || []
+          const hasLiked = likesArr.some(cId => String(cId?._id || cId) === currentUserId)
+          const newLikes = hasLiked
+            ? likesArr.filter(cId => String(cId?._id || cId) !== currentUserId)
+            : [...likesArr, currentUserId]
+
+          return { ...comment, likes: newLikes }
+        }
+        return comment
+      })
+    )
 
     try {
       const token = localStorage.getItem("token")
       const cleanToken = token ? token.replace(/^Bearer\s+/i, "").trim() : ""
 
       const resp = await axios.post(`${API_POST_URL}/${postId}/comment/${commentId}/like`, {}, {
-        headers: { 
-          token: cleanToken,
-          Authorization: `Bearer ${cleanToken}`
-        }
+        headers: { token: cleanToken }
       })
 
       const updatedPost = resp.data?.data || resp.data?.post
@@ -102,7 +125,8 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
       }
     } catch (error) {
       console.error("Error liking comment:", error)
-      toast.error("Failed to toggle comment like")
+      showToast.error("Failed to toggle comment like")
+      setCommentsList(previousComments) // Rollback on failure
     }
   }
 
@@ -121,22 +145,20 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-4xl h-[85vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
+          className="w-full max-w-4xl h-[88vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
         >
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-3.5 right-4 z-50 p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer"
+            className="absolute top-3.5 right-4 z-50 p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm"
           >
             <X size={18} />
           </button>
 
-          {/* LEFT SIDE: Burgundy Gradient Panel (FIXED NO-SCROLL) */}
+          {/* LEFT SIDE: Burgundy Gradient Panel (Desktop Only) */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
-            
-            {/* Top/Middle Section */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              {/* Author Info */}
+              {/* Author Info - Frameless Profile Picture */}
               <Link 
                 to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
                 onClick={onClose}
@@ -145,7 +167,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                 <img 
                   src={authorPic} 
                   alt="Author" 
-                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/20 shadow-sm group-hover:scale-105 transition-transform" 
+                  className="w-10 h-10 rounded-full object-cover flex-shrink-0 group-hover:scale-105 transition-transform" 
                 />
                 <div>
                   <h4 className="font-bold text-white text-sm capitalize tracking-wide group-hover:underline">{authorName}</h4>
@@ -155,8 +177,12 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
               {/* Title & Description */}
               <div className="flex-shrink-0 mb-2">
-                <h2 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2">{selectedPost?.title}</h2>
-                <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal line-clamp-3 mt-1">{selectedPost?.description}</p>
+                {selectedPost?.title && (
+                  <h2 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2">{selectedPost.title}</h2>
+                )}
+                <p className="text-white/90 text-sm leading-relaxed whitespace-pre-line break-words font-normal line-clamp-3 mt-1">
+                  {selectedPost?.description}
+                </p>
               </div>
 
               {/* Image Frame Container */}
@@ -187,9 +213,9 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           {/* RIGHT SIDE: Comments Panel */}
           <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0">
             {/* Header */}
-            <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-center relative shadow-sm flex-shrink-0">
-              <h3 className="font-bold text-[#5E1243] text-base text-center">Comments</h3>
-              <span className="hidden sm:block absolute right-14 text-xs text-gray-400 font-medium">{commentsList.length} total</span>
+            <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between relative shadow-sm flex-shrink-0">
+              <h3 className="font-bold text-[#5E1243] text-base">Comments</h3>
+              <span className="text-xs text-gray-400 font-medium mr-8 sm:mr-0">{commentsList.length} total</span>
             </div>
 
             {/* Comments List */}
@@ -205,8 +231,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
                   return (
                     <div key={comment._id || idx} className="flex gap-3 items-start bg-white p-3.5 rounded-2xl border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                      
-                      {/* Clickable Avatar */}
                       <Link 
                         to={commentAuthorId ? `/profile/${commentAuthorId}` : "/profile"} 
                         onClick={onClose}
@@ -237,7 +261,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                         onClick={() => handleToggleCommentLike(comment._id)}
                         className="p-1.5 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                       >
-                        <Heart className={`w-4 h-4 ${isCommentLiked ? 'fill-rose-600 text-rose-600' : 'text-gray-300'}`} />
+                        <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isCommentLiked ? 'fill-rose-600 text-rose-600' : 'text-gray-300'}`} />
                       </button>
                     </div>
                   )
@@ -265,7 +289,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               />
               <button
                 onClick={handleAddComment}
-                disabled={submittingComment}
+                disabled={submittingComment || !modalCommentText.trim()}
                 className="w-10 h-10 bg-gradient-to-tr from-[#4a0d33] via-[#851D52] to-[#851D52] text-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {submittingComment ? (
