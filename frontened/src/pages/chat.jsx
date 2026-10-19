@@ -3,7 +3,7 @@ import axios from "axios";
 import { Send, Bot, User, Sparkles, RefreshCw, ArrowLeft, Copy, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { baseUrl } from "../core";
-import { toast } from "sonner";
+import showToast from "../component/CustomToast";
 
 const Chat = () => {
     const navigate = useNavigate();
@@ -28,10 +28,20 @@ const Chat = () => {
         scrollToBottom();
     }, [messages, loading]);
 
+    const triggerToast = (type, message) => {
+        if (showToast && typeof showToast[type] === 'function') {
+            showToast[type](message);
+        } else if (showToast && typeof showToast.success === 'function') {
+            showToast.success(message);
+        } else if (typeof showToast === 'function') {
+            showToast(message);
+        }
+    };
+
     const handleCopy = (id, text) => {
         navigator.clipboard.writeText(text);
         setCopiedId(id);
-        toast.success("Copied to clipboard!");
+        triggerToast("success", "Copied to clipboard!");
         setTimeout(() => setCopiedId(null), 2000);
     };
 
@@ -76,7 +86,7 @@ const Chat = () => {
             setMessages((prev) => [...prev, aiMessage]);
         } catch (error) {
             console.error("AI Agent Error:", error);
-            toast.error("Failed to connect with Bayan AI.");
+            triggerToast("error", "Failed to connect with Bayan AI.");
         } finally {
             setLoading(false);
         }
@@ -91,7 +101,7 @@ const Chat = () => {
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             }
         ]);
-        toast.info("Chat cleared");
+        triggerToast("info", "Chat cleared");
     };
 
     return (

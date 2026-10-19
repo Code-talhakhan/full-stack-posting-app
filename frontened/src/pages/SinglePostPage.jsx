@@ -1,21 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import moment from 'moment'
 import { baseUrl } from '../core'
 import Header from '../component/Header'
 import CommentModal from '../component/CommentModal'
+import EditPostModal from '../component/EditPostModal'
+import DeletePostModal from '../component/DeletePostModal'
 import { store } from '../store/states'
-import { toast } from 'sonner'
+import showToast from '../component/CustomToast'
 import { 
   ArrowLeft, 
   Heart, 
   MessageCircle, 
   Share2, 
   Clock, 
-  MessageSquareOff 
+  MessageSquareOff,
+  MoreVertical,
+  Pencil,
+  Trash2
 } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const API_POST_URL = `${baseUrl}/api/v1/post`
 const DEFAULT_AVATAR = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS73K-hNaw6ETaPB2zU7PqIiWDgchEYFoDcaRJLGtHYRg&s=10"
@@ -35,9 +40,31 @@ const SinglePostPage = () => {
   const [likeCount, setLikeCount] = useState(0)
   const [selectedPostModal, setSelectedPostModal] = useState(null)
 
+  // Dropdown & Edit/Delete States
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const dropdownRef = useRef(null)
+
   const currentUserId = String(
     user?.data?.user?._id || user?.user?._id || user?.data?._id || user?._id || ""
   )
+
+  // Outside click handler for dropdown menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     fetchSinglePost()
@@ -56,7 +83,7 @@ const SinglePostPage = () => {
         const resp = await axios.get(`${API_POST_URL}/${postId}`, { headers: { token } })
         postData = resp.data?.data || resp.data?.post || resp.data
       } catch (err) {
-        // Fallback search in feed API
+        // Fallback search in feed API if single endpoint fails
         const allResp = await axios.get(API_POST_URL, { headers: { token } })
         const rawPosts = allResp.data?.data || allResp.data || []
         const allPosts = Array.isArray(rawPosts) ? rawPosts : []
@@ -70,6 +97,8 @@ const SinglePostPage = () => {
       }
 
       setPost(postData)
+      setEditTitle(postData.title || '')
+      setEditDescription(postData.description || '')
 
       if (selectedPostModal) {
         setSelectedPostModal(postData)
@@ -87,7 +116,7 @@ const SinglePostPage = () => {
     }
   }
 
-  // Back button handling with smooth state
+  // Back button handling
   const handleBack = () => {
     setIsNavigatingBack(true)
     navigate(-1)
@@ -96,7 +125,7 @@ const SinglePostPage = () => {
   // Handle Post Like
   const handleLike = async () => {
     if (!currentUserId) {
-      toast.error("Please login first")
+      showToast.error("Please login first")
       return
     }
 
@@ -116,7 +145,52 @@ const SinglePostPage = () => {
     } catch (error) {
       setIsLiked(prevLiked)
       setLikeCount(prevCount)
-      toast.error("Failed to update like")
+      showToast.error("Failed to update like")
+    }
+  }
+
+  // Handle Delete Post
+  const handleDeletePost = async () => {
+    try {
+      setDeleting(true)
+      const token = localStorage.getItem("token")
+      await axios.delete(`${API_POST_URL}/${postId}`, { headers: { token } })
+      showToast.success("Post deleted successfully")
+      setDeleteOpen(false)
+      navigate('/')
+    } catch (error) {
+      console.error("Delete error:", error)
+      showToast.error("Failed to delete post")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  // Handle Save Edit Post
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim() || !editDescription.trim()) {
+      showToast.error("Title and description are required")
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      const token = localStorage.getItem("token")
+      const resp = await axios.put(
+        `${API_POST_URL}/${postId}`, 
+        { title: editTitle, description: editDescription }, 
+        { headers: { token } }
+      )
+
+      const updatedData = resp.data?.data || resp.data?.post || { ...post, title: editTitle, description: editDescription }
+      setPost(updatedData)
+      setEditOpen(false)
+      showToast.success("Post updated successfully")
+    } catch (error) {
+      console.error("Edit error:", error)
+      showToast.error("Failed to update post")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -125,13 +199,12 @@ const SinglePostPage = () => {
     try {
       const shareUrl = window.location.href
       await navigator.clipboard.writeText(shareUrl)
-      toast.success("Link copied to clipboard!")
+      showToast.success("Link copied to clipboard!")
     } catch (err) {
-      toast.error("Failed to copy link")
+      showToast.error("Failed to copy link")
     }
   }
 
-  // Agar user back navigate kar raha hai, tou screen par empty/notFound flash na ho
   if (isNavigatingBack) {
     return (
       <div className="min-h-screen bg-[#F4F7FB]">
@@ -171,13 +244,18 @@ const SinglePostPage = () => {
     )
   }
 
+  // Extract author data safely
   const postAuthor = post?.authorId || post?.user || post?.author || {}
   const authorFirstName = postAuthor?.firstname || postAuthor?.firstName || postAuthor?.name || 'User'
   const authorLastName = postAuthor?.lastname || postAuthor?.lastName || ''
   const authorPic = postAuthor?.profilePicture || postAuthor?.profilepicture || DEFAULT_AVATAR
   const commentsList = post?.comments || []
 
-  // Extract Post Image with Fallbacks
+  // Author ID Match Verification
+  const authorIdStr = String(postAuthor?._id || postAuthor?.id || postAuthor || '')
+  const isOwner = Boolean(currentUserId && authorIdStr && currentUserId === authorIdStr)
+
+  // Image Fallback
   const postImage = post?.imageUrl 
                  || post?.image 
                  || (typeof post?.files === 'string' ? post?.files : post?.files?.[0]?.url || post?.files?.[0]) 
@@ -200,7 +278,7 @@ const SinglePostPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative"
+          className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 relative"
         >
           {/* Header */}
           <div className="flex justify-between items-start mb-4">
@@ -221,6 +299,54 @@ const SinglePostPage = () => {
                 </div>
               </div>
             </Link>
+
+            {/* Three Dots Dropdown Menu */}
+            {isOwner && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all cursor-pointer"
+                  aria-label="Options"
+                >
+                  <MoreVertical size={20} />
+                </button>
+
+                <AnimatePresence>
+                  {showDropdown && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-1 w-36 bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-gray-100 p-1.5 z-20 overflow-hidden"
+                    >
+                      <button
+                        onClick={() => {
+                          setEditTitle(post.title || '')
+                          setEditDescription(post.description || '')
+                          setEditOpen(true)
+                          setShowDropdown(false)
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer font-medium"
+                      >
+                        <Pencil size={16} className="text-gray-600" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDropdown(false)
+                          setDeleteOpen(true)
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer font-medium"
+                      >
+                        <Trash2 size={16} className="text-rose-600" />
+                        <span>Delete</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
 
           {/* Title, Description & Image Section */}
@@ -284,6 +410,24 @@ const SinglePostPage = () => {
           setSelectedPostModal(updatedPost)
         }}
       /> 
+
+      <EditPostModal
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        editTitle={editTitle}
+        setEditTitle={setEditTitle}
+        editDescription={editDescription}
+        setEditDescription={setEditDescription}
+        onSave={handleSaveEdit}
+        saving={isSubmitting}
+      />
+
+      <DeletePostModal
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDeletePost}
+        deleting={deleting}
+      />
     </div>
   )
 }

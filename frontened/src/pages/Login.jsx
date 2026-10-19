@@ -1,13 +1,12 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
-import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
-import { toast } from "sonner"
 import loginPic from "../assets/signup-pic.png" 
 import { store } from "../store/states" 
-
-const baseUrl = "http://localhost:3001"
+import { baseUrl } from "../core"
+import showToast from "../component/CustomToast"
 
 const Input = ({ label, type = "text", placeholder, value, onChange, isPassword }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -69,7 +68,7 @@ const Login = () => {
     const cleanEmail = email.trim().toLowerCase()
 
     if (!cleanEmail || !password) {
-      toast.error("Please enter both email and password")
+      showToast.error("Please enter both email and password")
       return
     }
 
@@ -81,15 +80,7 @@ const Login = () => {
         password: password,
       })
 
-      toast("Login Successful!", {
-        icon: <CheckCircle2 size={20} className="text-white" />,
-        duration: 1500, 
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+      showToast.success("Login Successful!")
 
       if (resp?.data?.data?.token) {
         const token = resp.data.data.token;
@@ -115,13 +106,13 @@ const Login = () => {
       // Check if Email is unverified (OTP Flow Integration)
       if (errorMsg.includes("not verified") || errorMsg.includes("verify your email") || errorMsg.includes("unverified")) {
         try {
-          toast.info("Email is not verified. Resending OTP...")
+          showToast.info("Email is not verified. Resending OTP...")
 
           await axios.post(`${baseUrl}/api/v1/send-otp`, {
             email: cleanEmail
           })
 
-          toast.success("OTP sent to your email!")
+          showToast.success("OTP sent to your email!")
 
           navigate("/verify-email", {
             state: {
@@ -130,10 +121,10 @@ const Login = () => {
           })
         } catch (otpErr) {
           console.error("OTP Send Error:", otpErr)
-          toast.error(otpErr?.response?.data?.message || "Failed to send OTP. Try again!")
+          showToast.error(otpErr?.response?.data?.message || "Failed to send OTP. Try again!")
         }
       } else {
-        toast.error(error?.response?.data?.message || "Invalid credentials!")
+        showToast.error(error?.response?.data?.message || "Invalid credentials!")
       }
     } finally {
       set_loading(false)

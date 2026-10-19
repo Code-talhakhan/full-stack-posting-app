@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { useLocation, useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { motion } from 'framer-motion'
-import { toast } from 'sonner'
 import { Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 import { baseUrl } from '../core'
+import showToast from '../component/CustomToast'
 
 const ResetPassword = () => {
   const location = useLocation()
@@ -38,11 +38,11 @@ const ResetPassword = () => {
     if (!canResend || !email) return
     try {
       await axios.post(`${baseUrl}/api/v1/send-password-otp`, { email })
-      toast.success('New OTP sent to your email!')
+      showToast.success('New OTP sent to your email!')
       setResendTimer(55)
       setCanResend(false)
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to resend OTP')
+      showToast.error(err?.response?.data?.message || 'Failed to resend OTP')
     }
   }
 
@@ -54,17 +54,17 @@ const ResetPassword = () => {
     const cleanOtp = otp.trim()
 
     if (!cleanEmail) {
-      toast.error("Please enter your email address")
+      showToast.error("Please enter your email address")
       return
     }
 
     if (!cleanOtp) {
-      toast.error("Please enter the OTP code")
+      showToast.error("Please enter the OTP code")
       return
     }
 
     if (!newPassword) {
-      toast.error("Please enter your new password")
+      showToast.error("Please enter your new password")
       return
     }
 
@@ -77,12 +77,12 @@ const ResetPassword = () => {
         newPassword: newPassword
       })
 
-      toast.success(resp?.data?.message || "Password updated successfully!")
+      showToast.success(resp?.data?.message || "Password updated successfully!")
       navigate('/login')
 
     } catch (error) {
       console.error("Reset Password Error:", error)
-      toast.error(error?.response?.data?.message || "Failed to reset password")
+      showToast.error(error?.response?.data?.message || "Failed to reset password")
     } finally {
       setLoading(false)
     }

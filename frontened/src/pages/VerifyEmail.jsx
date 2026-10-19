@@ -3,9 +3,9 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
 import { Lock, CheckCircle2, ArrowRight, Mail, RefreshCw } from "lucide-react"
-import { toast } from "sonner"
 import { baseUrl } from "../core"
 import { store } from "../store/states"
+import showToast from "../component/CustomToast"
 
 const VerifyEmail = () => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""])
@@ -75,12 +75,12 @@ const VerifyEmail = () => {
     const otpCode = otp.join("")
 
     if (otpCode.length < 6) {
-      toast.error("Please enter the complete 6-digit OTP code.")
+      showToast.error("Please enter the complete 6-digit OTP code.")
       return
     }
 
     if (!targetEmail) {
-      toast.error("Email address missing. Please sign up again.")
+      showToast.error("Email address missing. Please sign up again.")
       return
     }
 
@@ -94,14 +94,14 @@ const VerifyEmail = () => {
       })
 
       setIsVerified(true)
-      toast.success("Email verified successfully!")
+      showToast.success("Email verified successfully!")
 
       setTimeout(() => {
         navigate("/login")
       }, 2000)
   
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Invalid or expired OTP code!")
+      showToast.error(error?.response?.data?.message || "Invalid or expired OTP code!")
       setOtp(["", "", "", "", "", ""])
       inputRefs.current[0]?.focus()
     } finally {
@@ -112,7 +112,7 @@ const VerifyEmail = () => {
   const handleResendOtp = async () => {
     if (!canResend) return
     if (!targetEmail) {
-      toast.error("Email address missing.")
+      showToast.error("Email address missing.")
       return
     }
 
@@ -125,9 +125,9 @@ const VerifyEmail = () => {
         email: targetEmail.toLowerCase() 
       })
       
-      toast.success("A new verification code has been sent.")
+      showToast.success("A new verification code has been sent.")
     } catch (error) {
-      toast.error("Failed to resend code. Try again.")
+      showToast.error("Failed to resend code. Try again.")
       setCanResend(true)
     }
   }

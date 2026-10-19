@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from "react-router-dom"
 import axios from "axios"
-import { Eye, EyeOff, CheckCircle2 } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
-import { toast } from "sonner"
 import signupPic from "../assets/signup-pic.png"
-import { baseUrl } from "../core" // core se central baseUrl import karna best practise hai
+import { baseUrl } from "../core"
+import showToast from "../component/CustomToast"
 
 const Input = ({ label, type = "text", placeholder, value, onChange, isPassword }) => {
   const [showPassword, setShowPassword] = useState(false)
@@ -67,17 +67,17 @@ const Signup = () => {
     e.preventDefault()
 
     if (!firstname.trim() || !lastname.trim() || !email.trim() || !password || !rep_password) {
-      toast.error("Please fill in all fields")
+      showToast.error("Please fill in all fields")
       return
     }
 
     if (password !== rep_password) {
-      toast.error("Passwords do not match!")
+      showToast.error("Passwords do not match!")
       return
     }
 
     if (password.length < 8) {
-      toast.error("Password must be at least 8 characters long")
+      showToast.error("Password must be at least 8 characters long")
       return
     }
 
@@ -85,7 +85,7 @@ const Signup = () => {
       set_loading(true)
 
       // 1. User Signup Request
-      const signupResp = await axios.post(`${baseUrl}/api/v1/signup`, {
+      await axios.post(`${baseUrl}/api/v1/signup`, {
         firstname: firstname,
         lastname: lastname,
         email: email,
@@ -97,21 +97,14 @@ const Signup = () => {
         email: email.toLowerCase()
       })
 
-      toast("Signup Successful! OTP sent to your email.", {
-        icon: <CheckCircle2 size={20} className="text-white" />,
-        style: {
-          background: 'linear-gradient(to bottom right, #4a0d33, #851D52, #e87163)',
-          color: '#ffffff',
-          border: 'none',
-        },
-      })
+      showToast.success("Signup Successful! OTP sent to your email.")
 
       // 3. Navigate to Verify Email screen with user email in state
       navigate("/verify-email", { state: { email: email.toLowerCase() } })
 
     } catch (error) {
       console.error(error)
-      toast.error(error?.response?.data?.message || "Something went wrong. Please try again.")
+      showToast.error(error?.response?.data?.message || "Something went wrong. Please try again.")
     } finally {
       set_loading(false)
     }
