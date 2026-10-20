@@ -20,7 +20,8 @@ import {
   MessageCircle,
   Share2,
   User,
-  Loader2
+  Loader2,
+  Link2
 } from 'lucide-react'
 import Input from "../component/Input"
 import Header from "../component/Header"
@@ -133,10 +134,42 @@ const Profile = () => {
   const defaultFirstName = displayData?.firstname || displayData?.firstName || displayData?.name || "User"
   const defaultLastName = displayData?.lastname || displayData?.lastName || ""
   const defaultEmail = displayData?.email || "Email not found"
+  const defaultBio = displayData?.bio || ""
   const defaultPostCount = userPosts.length
   const memberSince = displayData?.createdAt 
     ? new Date(displayData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
     : "Recently"
+
+  // Helper function to render bio with Link2 Icon for URLs
+  const renderBioWithLinks = (bioText) => {
+    if (!bioText) return null;
+    const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
+
+    return bioText.split('\n').map((line, lineIdx) => (
+      <React.Fragment key={lineIdx}>
+        {line.split(' ').map((word, wordIdx) => {
+          if (word.match(urlRegex)) {
+            const href = word.startsWith('http') ? word : `https://${word}`;
+            return (
+              <a
+                key={wordIdx}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[#851D52] hover:underline font-semibold cursor-pointer align-baseline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Link2 size={14} className="inline-block flex-shrink-0" />
+                <span>{word}</span>{' '}
+              </a>
+            );
+          }
+          return word + ' ';
+        })}
+        <br />
+      </React.Fragment>
+    ));
+  };
 
   // Modal States
   const [editOpen, set_editOpen] = useState(false)
@@ -144,11 +177,13 @@ const Profile = () => {
 
   const [editFirstname, set_editFirstname] = useState("")
   const [editLastname, set_editLastname] = useState("")
+  const [editBio, set_editBio] = useState("")
   const [savingName, set_savingName] = useState(false)
 
   const openEditModal = () => {
     set_editFirstname(defaultFirstName !== "User" ? defaultFirstName : "")
     set_editLastname(defaultLastName)
+    set_editBio(defaultBio)
     set_editOpen(true)
   }
 
@@ -173,6 +208,7 @@ const Profile = () => {
       await axios.put(`${baseUrl}/api/v1/profile`, {
         firstname: editFirstname,
         lastname: editLastname,
+        bio: editBio,
       }, {
         headers: { token: localStorage.getItem("token") }
       })
@@ -183,11 +219,13 @@ const Profile = () => {
           ...loggedInUserData,
           firstname: editFirstname,
           lastname: editLastname,
+          bio: editBio,
         }
       })
 
       showToast.success("Profile updated")
       set_editOpen(false)
+      fetchProfileAndPosts()
     } catch (error) {
       showToast.error(error?.response?.data?.message || "Failed to update profile")
     } finally {
@@ -257,6 +295,7 @@ const Profile = () => {
       })
 
       showToast.success("Profile picture updated")
+      fetchProfileAndPosts()
     } catch (error) {
       showToast.error(error?.response?.data?.message || "Failed to upload picture")
     } finally {
@@ -386,64 +425,79 @@ const Profile = () => {
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-6"
+          className="bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 mb-6"
         >
-          <div className="relative w-32 h-32 flex-shrink-0">
-            <img
-              src={displayData?.profilePicture || displayData?.profilepicture || DEFAULT_AVATAR}
-              alt="Profile"
-              className="w-32 h-32 rounded-full object-cover bg-white"
-            />
+          {/* Top Section: Avatar & User Info */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
+            <div className="relative w-32 h-32 flex-shrink-0">
+              <img
+                src={displayData?.profilePicture || displayData?.profilepicture || DEFAULT_AVATAR}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover bg-white"
+              />
 
-            {isOwnProfile && (
-              <>
-                <input
-                  type="file"
-                  hidden
-                  id="profile-selector"
-                  accept="image/*"
-                  onChange={(e) => {
-                    upload_file(e.target.files[0])
-                    e.target.value = null
-                  }}
-                />
-                <label
-                  htmlFor="profile-selector"
-                  className="absolute right-0 bottom-0 w-9 h-9 rounded-full bg-gradient-to-r from-[#5E1243] to-[#9c1f52] flex items-center justify-center shadow-lg shadow-[#5E1243]/30 cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  <Camera size={16} className="text-white" strokeWidth={2} />
-                </label>
-              </>
-            )}
+              {isOwnProfile && (
+                <>
+                  <input
+                    type="file"
+                    hidden
+                    id="profile-selector"
+                    accept="image/*"
+                    onChange={(e) => {
+                      upload_file(e.target.files[0])
+                      e.target.value = null
+                    }}
+                  />
+                  <label
+                    htmlFor="profile-selector"
+                    className="absolute right-0 bottom-0 w-9 h-9 rounded-full bg-gradient-to-r from-[#5E1243] to-[#9c1f52] flex items-center justify-center shadow-lg shadow-[#5E1243]/30 cursor-pointer hover:opacity-90 transition-opacity"
+                  >
+                    <Camera size={16} className="text-white" strokeWidth={2} />
+                  </label>
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center sm:items-start flex-1 w-full mt-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-0.5 capitalize">
+                {defaultFirstName} {defaultLastName}
+              </h3>
+
+              {/* Subtle Gray Email */}
+              <p className="text-gray-500 font-medium text-xs sm:text-sm mb-2">{defaultEmail}</p>
+
+              {/* INSTA-STYLE BIO WITH LINK ICON */}
+              {defaultBio && (
+                <div className="my-1.5 max-w-md w-full text-center sm:text-left">
+                  <p className="text-sm font-normal text-gray-700 leading-relaxed tracking-normal">
+                    {renderBioWithLinks(defaultBio)}
+                  </p>
+                </div>
+              )}
+
+              {uploading && (
+                <p className="text-xs text-gray-400 mb-2">Uploading photo...</p>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-col items-center sm:items-start flex-1 w-full mt-2">
-            <h3 className="text-2xl font-bold text-gray-900 mb-1 capitalize">
-              {defaultFirstName} {defaultLastName}
-            </h3>
-            <p className="text-[#851D52] font-medium mb-5">{defaultEmail}</p>
-
-            {uploading && (
-              <p className="text-xs text-gray-400 mb-4">Uploading photo...</p>
-            )}
-
-            {isOwnProfile && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={openEditModal}
-                  className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={() => set_securityOpen(true)}
-                  className="px-5 py-2 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  Security
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Bottom Section: INSTAGRAM-STYLE FULL WIDTH BUTTONS ROW */}
+          {isOwnProfile && (
+            <div className="flex items-center gap-3 w-full pt-2">
+              <button
+                onClick={openEditModal}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-100 text-gray-800 font-semibold text-sm transition-all cursor-pointer text-center"
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={() => set_securityOpen(true)}
+                className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-100 text-gray-800 font-semibold text-sm transition-all cursor-pointer text-center"
+              >
+                Security
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Stats Section */}
@@ -742,6 +796,22 @@ const Profile = () => {
                   value={editLastname} 
                   onChange={(e) => set_editLastname(e.target.value)} 
                 />
+
+                {/* Bio Input Field */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-semibold text-gray-700">Bio</label>
+                    <span className="text-[10px] text-gray-400 font-medium">{editBio.length}/250</span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    maxLength={250}
+                    value={editBio}
+                    onChange={(e) => set_editBio(e.target.value)}
+                    placeholder="Tell something about yourself... (Press Enter for line breaks)"
+                    className="w-full bg-[#fcf8fa] border-2 border-gray-200 rounded-2xl p-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#851D52] transition-colors resize-none"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-3 mt-7">

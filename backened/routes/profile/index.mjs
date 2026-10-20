@@ -2,7 +2,7 @@ import express from "express"
 import { UserModel, PostModel } from "../../models/index.mjs" 
 import bcrypt from "bcryptjs"
 import { multerMiddleware } from "../../libs/multer.mjs"
-import {uploadOnCloudinary} from "../../libs/cloudinary.mjs"
+import { uploadOnCloudinary } from "../../libs/cloudinary.mjs"
 
 const router = express.Router()
 
@@ -72,7 +72,7 @@ router.get("/user/:userId", async (req, res, next) => {
 })
 
 
-// update profile
+// update profile (Includes firstname, lastname, and bio)
 router.put("/profile", async (req, res, next) => {
     try {
         if (!req.currentUser) {
@@ -81,6 +81,7 @@ router.put("/profile", async (req, res, next) => {
 
         const firstname = req.body.firstname
         const lastname = req.body.lastname
+        const bio = req.body.bio
 
         const user = await UserModel.findOne({ _id: req.currentUser._id })
 
@@ -90,18 +91,23 @@ router.put("/profile", async (req, res, next) => {
             })
         }
 
-        if (firstname) {
+        if (firstname !== undefined) {
             user.firstname = firstname
         }
 
-        if (lastname) {
+        if (lastname !== undefined) {
             user.lastname = lastname
+        }
+
+        if (bio !== undefined) {
+            user.bio = bio
         }
 
         await user.save()
 
         return res.send({
             message: "profile updated",
+            data: user
         })
 
     } catch (error) {

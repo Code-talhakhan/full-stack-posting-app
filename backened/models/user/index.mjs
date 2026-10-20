@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema({
         trim: true,
         default: null,
     },
+    bio: {
+        type: String,
+        trim: true,
+        default: "",
+        maxLength: [200, "Bio cannot exceed 200 characters"],
+    },
     isEmailVerified: {
         type: Boolean,
         default: false
