@@ -147,14 +147,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-4xl h-[88vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
         >
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-3.5 right-4 z-50 p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm"
-          >
-            <X size={18} />
-          </button>
-
           {/* LEFT SIDE: Burgundy Gradient Panel (Desktop Only) */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
@@ -211,11 +203,27 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           </div>
 
           {/* RIGHT SIDE: Comments Panel */}
-          <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0">
-            {/* Header */}
-            <div className="px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between relative shadow-sm flex-shrink-0">
-              <h3 className="font-bold text-[#5E1243] text-base">Comments</h3>
-              <span className="text-xs text-gray-400 font-medium mr-8 sm:mr-0">{commentsList.length} total</span>
+          <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0 relative">
+            {/* Perfectly Centered & Responsive Header */}
+            <div className="px-4 sm:px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between relative shadow-sm flex-shrink-0">
+              {/* Left Placeholder to balance close button on mobile */}
+              <div className="w-8 md:w-auto">
+                <span className="hidden md:inline-block text-xs text-gray-400 font-medium">{commentsList.length} total</span>
+              </div>
+
+              {/* Centered Heading */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <h3 className="font-bold text-[#5E1243] text-base text-center tracking-tight">Comments</h3>
+                <span className="md:hidden text-xs text-gray-400 font-medium">({commentsList.length})</span>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm z-10"
+              >
+                <X size={18} />
+              </button>
             </div>
 
             {/* Comments List */}
@@ -278,14 +286,14 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             </div>
 
             {/* Comment Input */}
-            <div className="p-4 border-t border-gray-200 bg-white flex items-center gap-2.5 flex-shrink-0">
+            <div className="p-3.5 sm:p-4 border-t border-gray-200 bg-white flex items-center gap-2.5 flex-shrink-0">
               <input
                 type="text"
                 placeholder="Add a comment..."
                 value={modalCommentText}
                 onChange={(e) => setModalCommentText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-                className="flex-1 bg-[#fcf8fa] border-2 border-[#851D52]/40 rounded-full px-5 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#851D52]"
+                className="flex-1 bg-[#fcf8fa] border-2 border-[#851D52]/40 rounded-full px-4 sm:px-5 py-2.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#851D52]"
               />
               <button
                 onClick={handleAddComment}
