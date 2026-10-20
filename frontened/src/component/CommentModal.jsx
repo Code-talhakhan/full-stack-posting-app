@@ -14,6 +14,17 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
   const [modalCommentText, setModalCommentText] = useState("")
   const [submittingComment, setSubmittingComment] = useState(false)
   const [commentsList, setCommentsList] = useState([])
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Track viewport width for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Re-sync local comments list when selectedPost changes
   useEffect(() => {
@@ -140,12 +151,20 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          initial={isMobile ? { opacity: 0, y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+          animate={isMobile ? { opacity: 1, y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+          exit={isMobile ? { opacity: 0, y: "100%" } : { opacity: 0, scale: 0.95, y: 20 }}
+          transition={isMobile ? { type: "spring", damping: 25, stiffness: 250 } : { duration: 0.25, ease: "easeOut" }}
+          drag={isMobile ? "y" : false}
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0, bottom: 0.5 }}
+          onDragEnd={(e, info) => {
+            if (isMobile && (info.offset.y > 100 || info.velocity.y > 300)) {
+              onClose()
+            }
+          }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-4xl h-[88vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative"
+          className="w-full max-w-4xl h-[88vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative md:touch-auto touch-pan-y"
         >
           {/* LEFT SIDE: Burgundy Gradient Panel (Desktop Only) */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
@@ -204,26 +223,35 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
           {/* RIGHT SIDE: Comments Panel */}
           <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0 relative">
-            {/* Perfectly Centered & Responsive Header */}
-            <div className="px-4 sm:px-6 py-3.5 bg-white border-b border-gray-100 flex items-center justify-between relative shadow-sm flex-shrink-0">
-              {/* Left Placeholder to balance close button on mobile */}
-              <div className="w-8 md:w-auto">
-                <span className="hidden md:inline-block text-xs text-gray-400 font-medium">{commentsList.length} total</span>
+            
+            {/* Header Section with Drag Pill and Perfectly Spaced Title */}
+            <div className="bg-white border-b border-gray-100 flex flex-col justify-center relative shadow-sm flex-shrink-0 md:cursor-default cursor-grab active:cursor-grabbing">
+              
+              {/* Mobile Drag Handle Pill Indicator */}
+              <div className="md:hidden w-full flex justify-center pt-2.5 pb-1">
+                <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
               </div>
 
-              {/* Centered Heading */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-                <h3 className="font-bold text-[#5E1243] text-base text-center tracking-tight">Comments</h3>
-                <span className="md:hidden text-xs text-gray-400 font-medium">({commentsList.length})</span>
-              </div>
+              <div className="px-4 sm:px-6 pt-1.5 pb-3 sm:py-3.5 flex items-center justify-between relative min-h-[44px]">
+                {/* Left Placeholder */}
+                <div className="w-8 md:w-auto">
+                  <span className="hidden md:inline-block text-xs text-gray-400 font-medium">{commentsList.length} total</span>
+                </div>
 
-              {/* Close Button */}
-              <button
-                onClick={onClose}
-                className="p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm z-10"
-              >
-                <X size={18} />
-              </button>
+                {/* Centered Heading */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  <h3 className="font-bold text-[#5E1243] text-base text-center tracking-tight">Comments</h3>
+                  <span className="md:hidden text-xs text-gray-400 font-medium">({commentsList.length})</span>
+                </div>
+
+                {/* Close Button: Hidden on mobile (< 768px), Visible on Desktop */}
+                <button
+                  onClick={onClose}
+                  className="hidden md:flex p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm z-10"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Comments List */}
