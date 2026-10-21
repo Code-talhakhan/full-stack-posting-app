@@ -11,20 +11,20 @@ export const uploadOnCloudinary = async (file) => {
   try {
     if (!file) return null;
 
-    // 1. Agar DiskStorage hai (file.path available hai)
+    
     if (file.path) {
       const result = await cloudinary.uploader.upload(file.path, {
         resource_type: 'auto'
       });
       
-      // Upload hone ke baad temporary local file delete karein
+      
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
       }
       return result;
     }
 
-    // 2. Agar MemoryStorage hai (file.buffer available hai)
+    
     if (file.buffer) {
       return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -45,7 +45,7 @@ export const uploadOnCloudinary = async (file) => {
   } catch (error) {
     console.error('Cloudinary Upload Error:', error);
 
-    // Error aane par local temp file clean up karein
+    
     if (file?.path && fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }

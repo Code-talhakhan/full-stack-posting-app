@@ -7,7 +7,7 @@ const NotFound = () => {
   return (
     <div className="min-h-screen w-full relative flex items-center justify-center p-4 sm:p-6 overflow-hidden font-sans bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163]">
       
-      {/* Background abstract overlay effects */}
+   
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 
@@ -18,12 +18,12 @@ const NotFound = () => {
         transition={{ duration: 0.4 }}
       >
         <div className="relative inline-block mb-6">
-          {/* Question Mark Icon Container */}
+         
           <div className="w-24 h-24 bg-[#851D52]/10 rounded-full flex items-center justify-center mx-auto">
             <HelpCircle className="w-12 h-12 text-[#851D52]" />
           </div>
           
-          {/* Transparent 404 positioned at top-right of the icon */}
+          
           <span className="absolute -top-3 -right-8 text-3xl sm:text-4xl font-black text-gray-200/80 select-none tracking-tighter">
             404
           </span>

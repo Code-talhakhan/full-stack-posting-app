@@ -107,13 +107,13 @@ const Chat = () => {
     return (
         <div className="h-[100dvh] bg-[#FAF8F9] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#851D52]/10 via-[#FAF8F9] to-[#FAF8F9] flex flex-col p-2.5 sm:p-5 md:p-6 font-sans overflow-hidden">
             
-            {/* Main Wrapper */}
-            <div className="max-w-5xl w-full mx-auto flex flex-col h-full gap-2.5 sm:gap-3.5">
+           
+             <div className="max-w-5xl w-full mx-auto flex flex-col h-full gap-2.5 sm:gap-3.5">
                 
-                {/* Top Navigation Header */}
+               
                 <div className="bg-white/70 backdrop-blur-2xl border border-white/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 shadow-xl shadow-[#851D52]/5 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-2 sm:gap-3">
-                        {/* Back Button */}
+                       
                         <button
                             onClick={() => navigate(-1)}
                             className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-gray-50 hover:bg-[#851D52]/10 text-gray-600 hover:text-[#851D52] transition-all outline-none cursor-pointer border border-gray-100 flex-shrink-0"
@@ -149,7 +149,7 @@ const Chat = () => {
                     </button>
                 </div>
 
-                {/* Chat Body Box */}
+               
                 <div className="flex-1 bg-white/80 backdrop-blur-2xl border border-white/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 overflow-y-auto shadow-2xl shadow-[#851D52]/5 space-y-3.5 sm:space-y-5 min-h-0">
                     {messages.map((msg) => (
                         <div
@@ -158,7 +158,7 @@ const Chat = () => {
                                 msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                             }`}
                         >
-                            {/* Avatar Icon */}
+                            
                             <div
                                 className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm ${
                                     msg.sender === "user"
@@ -169,7 +169,7 @@ const Chat = () => {
                                 {msg.sender === "user" ? <User className="w-4 h-4 sm:w-4 sm:h-4" /> : <Bot className="w-4 h-4 sm:w-4 sm:h-4" />}
                             </div>
 
-                            {/* Message Bubble */}
+                           
                             <div className="space-y-1 relative min-w-0">
                                 <div
                                     className={`p-3 sm:p-4 rounded-2xl sm:rounded-3xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words ${
@@ -202,7 +202,7 @@ const Chat = () => {
                         </div>
                     ))}
 
-                    {/* Thinking / Loading Animation */}
+                    
                     {loading && (
                         <div className="flex gap-2 sm:gap-3 mr-auto max-w-[85%] sm:max-w-[80%] items-end">
                             <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-gray-100 text-[#851D52] border border-gray-200 flex items-center justify-center flex-shrink-0 shadow-xs">
@@ -222,7 +222,7 @@ const Chat = () => {
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Bar */}
+                
                 <form onSubmit={handleSend} className="flex gap-2 sm:gap-3 flex-shrink-0">
                     <div className="flex-1 min-w-0 relative">
                         <input
@@ -246,5 +246,6 @@ const Chat = () => {
         </div>
     );
 };
+
 
 export default Chat;

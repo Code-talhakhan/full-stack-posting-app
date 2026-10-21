@@ -23,7 +23,7 @@ const ForgotPassword = () => {
     try {
       setLoading(true)
 
-      // ✅ Header bypass solution: Authorization token clears out for public OTP requests
+      
       await axios.post(
         `${baseUrl}/api/v1/send-password-otp`,
         { email: cleanEmail },
@@ -62,12 +62,12 @@ const ForgotPassword = () => {
         transition={{ duration: 0.3 }}
         className="w-full max-w-md bg-white rounded-[32px] p-8 sm:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col items-center text-center"
       >
-        {/* Top Lock Icon Badge */}
+        
         <div className="w-14 h-14 rounded-2xl bg-[#5E1243]/5 border border-[#5E1243]/15 flex items-center justify-center mb-5 text-[#5E1243]">
           <Lock size={24} strokeWidth={1.8} />
         </div>
 
-        {/* Soft Heading */}
+        
         <h2 className="text-2xl sm:text-3xl font-bold text-[#4a0d33] tracking-tight mb-1.5">
           Forgot Password
         </h2>

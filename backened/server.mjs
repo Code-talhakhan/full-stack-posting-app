@@ -12,7 +12,7 @@ import { limiter } from "./middlewares/rate-limit/index.mjs";
 
 const app = express();
 
-// HTTP server instance create karein Express app ke sath
+
 const server = http.createServer(app);
 
 // Socket.io instance initialize karein CORS settings ke sath
@@ -23,11 +23,11 @@ const io = new Server(server, {
     }
 });
 
-// Online active users store karne ke liye Map (userId -> socketId)
+
 global.onlineUsers = new Map();
 
 io.on("connection", (socket) => {
-    // Frontend se user login hone par user._id register karein
+  
     socket.on("registerUser", (userId) => {
         if (userId) {
             global.onlineUsers.set(userId.toString(), socket.id);
@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
         }
     });
 
-    // Disconnect event handle karein
+    
     socket.on("disconnect", () => {
         for (let [userId, socketId] of global.onlineUsers.entries()) {
             if (socketId === socket.id) {
@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
     });
 });
 
-// Realtime socket instance pass karne ke liye req object mein inject karein
+
 app.use((req, res, next) => {
     req.io = io;
     next();
@@ -85,11 +85,11 @@ app.get("/users", async (req, res, next) => {
 // Public Auth Routes
 app.use("/api/v1", authRoutes);
 
-// Protected routes (JWT Auth Required - Har Route Module Separately Mount Hai)
+
 app.use("/api/v1", authGuardJWT, postRoutes);
 app.use("/api/v1", authGuardJWT, profileRoutes);
 app.use("/api/v1/notifications", authGuardJWT, notificationRoutes);
-app.use("/api/v1/agent", authGuardJWT, agentRoutes); // 4. AI Agent Route Mount (`/api/v1/agent/chat`)
+app.use("/api/v1/agent", authGuardJWT, agentRoutes); 
 
 // Server Listen
 server.listen(PORT, () => {

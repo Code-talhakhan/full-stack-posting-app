@@ -10,7 +10,7 @@ export const NotificationBell = () => {
     const [isOpen, setIsOpen] = useState(false);
     const socket = useSocket();
 
-    // Fetch initial notifications
+    
     const fetchNotifications = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -32,7 +32,7 @@ export const NotificationBell = () => {
         fetchNotifications();
     }, []);
 
-    // Listen for real-time notifications via Socket.io
+    
     useEffect(() => {
         if (!socket) return;
 
@@ -43,7 +43,7 @@ export const NotificationBell = () => {
         return () => socket.off("getNotification");
     }, [socket]);
 
-    // Mark as read when dropdown opens
+   
     const handleOpen = async () => {
         setIsOpen(!isOpen);
         const unreadExists = notifications.some((n) => !n.isRead);
@@ -66,7 +66,7 @@ export const NotificationBell = () => {
         }
     };
 
-    // Single Notification Delete Handler
+    
     const handleDelete = async (e, notificationId) => {
         e.stopPropagation();
         try {
@@ -88,7 +88,7 @@ export const NotificationBell = () => {
 
     return (
         <div className="relative">
-            {/* Bell Icon Button */}
+          
             <button 
                 onClick={handleOpen}
                 className="relative p-2.5 rounded-full hover:bg-gray-100/70 transition-all text-gray-600 hover:text-[#851D52] outline-none cursor-pointer"
@@ -102,7 +102,7 @@ export const NotificationBell = () => {
                 )}
             </button>
 
-            {/* Dropdown Menu - Fully Mobile Responsive */}
+            
             {isOpen && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>

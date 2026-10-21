@@ -16,7 +16,7 @@ const commentSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "users"
         }],
-        default: [] // Ensures likes array is always initialized
+        default: [] 
     }
 }, { timestamps: true });
 

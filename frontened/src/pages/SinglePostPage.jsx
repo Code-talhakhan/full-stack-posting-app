@@ -55,7 +55,7 @@ const SinglePostPage = () => {
     user?.data?.user?._id || user?.user?._id || user?.data?._id || user?._id || ""
   )
 
-  // Outside click handler for dropdown menu
+ 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -83,7 +83,7 @@ const SinglePostPage = () => {
         const resp = await axios.get(`${API_POST_URL}/${postId}`, { headers: { token } })
         postData = resp.data?.data || resp.data?.post || resp.data
       } catch (err) {
-        // Fallback search in feed API if single endpoint fails
+       
         const allResp = await axios.get(API_POST_URL, { headers: { token } })
         const rawPosts = allResp.data?.data || allResp.data || []
         const allPosts = Array.isArray(rawPosts) ? rawPosts : []
@@ -274,7 +274,7 @@ const SinglePostPage = () => {
           <span>Back</span>
         </button>
 
-        {/* Post Card */}
+     
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -300,7 +300,7 @@ const SinglePostPage = () => {
               </div>
             </Link>
 
-            {/* Three Dots Dropdown Menu */}
+       
             {isOwner && (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -349,14 +349,14 @@ const SinglePostPage = () => {
             )}
           </div>
 
-          {/* Title, Description & Image Section */}
+       
           <div className="pl-1 mb-4">
             {post.title && <h4 className="font-bold text-gray-900 text-[17px] mb-1.5">{post.title}</h4>}
             <p className="text-gray-600 text-[15px] sm:text-[16px] leading-relaxed whitespace-pre-line break-words mb-3">
               {post.description}
             </p>
 
-            {/* Post Image Container */}
+        
             {postImage && (
               <div className="w-full rounded-[20px] overflow-hidden border border-gray-100 bg-gray-50 shadow-sm my-3 max-h-[420px] flex items-center justify-center">
                 <img 

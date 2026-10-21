@@ -1,6 +1,6 @@
 import { NotificationModel } from "../../../models/Notification/index.mjs";
 
-// 1. Get All Notifications for Logged-in User
+// Get All Notifications for Logged-in User
 export const getNotifications = async (req, res) => {
     try {
         const userId = req.currentUser?._id || req.user?._id;
@@ -22,7 +22,7 @@ export const getNotifications = async (req, res) => {
     }
 };
 
-// 2. Mark All Notifications as Read
+//  Mark All Notifications as Read
 export const markNotificationsAsRead = async (req, res) => {
     try {
         const userId = req.currentUser?._id || req.user?._id;
@@ -43,7 +43,7 @@ export const markNotificationsAsRead = async (req, res) => {
     }
 };
 
-// 3. Delete Single Notification
+// Delete Single Notification
 export const deleteNotification = async (req, res) => {
     try {
         const { notificationId } = req.params;

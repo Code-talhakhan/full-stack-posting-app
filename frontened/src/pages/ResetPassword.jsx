@@ -96,12 +96,12 @@ const ResetPassword = () => {
         transition={{ duration: 0.3 }}
         className="w-full max-w-md bg-white rounded-[32px] p-8 sm:p-10 shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100/80 flex flex-col items-center text-center"
       >
-        {/* Top Lock Icon Badge */}
+    
         <div className="w-14 h-14 rounded-2xl bg-[#5E1243]/5 border border-[#5E1243]/15 flex items-center justify-center mb-5 text-[#5E1243]">
           <Lock size={24} strokeWidth={1.8} />
         </div>
 
-        {/* Soft Heading */}
+   
         <h2 className="text-2xl sm:text-3xl font-bold text-[#4a0d33] tracking-tight mb-1.5">
           Reset Password
         </h2>
@@ -109,10 +109,10 @@ const ResetPassword = () => {
           Enter the OTP sent to your email along with your new password
         </p>
 
-        {/* Form */}
+   
         <form onSubmit={handleResetPassword} className="w-full space-y-4">
           
-          {/* Email Address Input */}
+    
           <div className="flex flex-col gap-1 text-left">
             <label className="text-xs font-medium text-gray-500 ml-1">Email Address</label>
             <input
@@ -124,7 +124,7 @@ const ResetPassword = () => {
             />
           </div>
 
-          {/* Clean Single OTP Code Input */}
+     
           <div className="flex flex-col gap-1 text-left pt-1">
             <label className="text-xs font-medium text-gray-500 ml-1">Verification Code</label>
             <input
@@ -137,7 +137,7 @@ const ResetPassword = () => {
             />
           </div>
 
-          {/* New Password Input */}
+   
           <div className="flex flex-col gap-1 text-left pt-1">
             <label className="text-xs font-medium text-gray-500 ml-1">New Password</label>
             <div className="relative">
@@ -174,7 +174,7 @@ const ResetPassword = () => {
           </button>
         </form>
 
-        {/* Resend OTP Section */}
+   
         <div className="flex items-center justify-between w-full text-xs text-gray-400 mt-6 pt-4 border-t border-gray-100 font-normal">
           <span>Didn't get code?</span>
           {canResend ? (
@@ -189,7 +189,7 @@ const ResetPassword = () => {
           )}
         </div>
 
-        {/* Change Email Option */}
+    
         <p className="text-xs font-normal text-gray-400 mt-3">
           Need to change email?{" "}
           <Link to="/forgot-password" className="font-semibold text-[#851D52] hover:underline ml-0.5">

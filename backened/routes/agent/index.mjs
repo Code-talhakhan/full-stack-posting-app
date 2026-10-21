@@ -19,7 +19,7 @@ router.post("/chat", async (req, res) => {
 
         const ai = new GoogleGenAI({ apiKey });
 
-        // Updated model name to gemini-3.8-flash
+        
         const response = await ai.models.generateContent({
             model: "gemini-3.8-flash",
             contents: prompt,

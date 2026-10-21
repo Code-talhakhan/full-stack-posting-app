@@ -19,14 +19,14 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fffdfd] via-[#fdfafb] to-[#f7f0f4] text-gray-800 flex flex-col justify-between overflow-hidden relative selection:bg-[#851D52] selection:text-white">
       
-      {/* Background Decorative Glow Elements */}
+      
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-[#851D52]/15 to-[#e87163]/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-[#4a0d33]/15 to-[#851D52]/10 blur-[140px] pointer-events-none" />
 
-      {/* Top Header / Navigation Bar */}
+     
       <header className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
         <Link to="/" className="flex items-center gap-2 group">
-          {/* Custom Logo Image with Soft Drop Shadow */}
+         
           <img 
             src={logo} 
             alt="Bayan Logo" 
@@ -56,10 +56,10 @@ const Welcome = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
+     
       <main className="w-full max-w-6xl mx-auto px-6 pt-8 pb-16 relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
         
-        {/* Left Side: Engaging Headline & CTA */}
+        
         <motion.div 
           initial={{ opacity: 0, x: -40 }}
           animate={{ opacity: 1, x: 0 }}
@@ -74,18 +74,18 @@ const Welcome = () => {
             </span>
           </div>
 
-          {/* Main Title */}
+         
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#3d0a2a] leading-[1.15] tracking-tight">
             Apne Khayalat Ko <br className="hidden sm:block" />
             Eik Naya <span className="bg-gradient-to-r from-[#851D52] to-[#e87163] text-transparent bg-clip-text">Bayan</span> Do.
           </h1>
 
-          {/* Subtitle */}
+         
           <p className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed">
             Real-time posts, seamless discussions, aur dynamic conversations ke saath doston se juden. Apni aawaz ko eik modern aur safe platform par share karein.
           </p>
 
-          {/* Call To Action Buttons */}
+        
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
             <Link
               to="/signup"
@@ -103,7 +103,7 @@ const Welcome = () => {
             </Link>
           </div>
 
-          {/* Trust Highlights */}
+          
           <div className="pt-6 flex items-center justify-center lg:justify-start gap-6 text-xs text-gray-500 font-medium">
             <div className="flex items-center gap-1.5">
               <Zap size={15} className="text-[#851D52]" /> Fast & Realtime
@@ -117,14 +117,14 @@ const Welcome = () => {
           </div>
         </motion.div>
 
-        {/* Right Side: Interactive Mockup Card */}
+      
         <motion.div 
           initial={{ opacity: 0, scale: 0.9, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="flex-1 w-full max-w-md relative"
         >
-          {/* Main Card UI Preview */}
+          
           <div className="bg-white/90 backdrop-blur-xl border border-white/80 rounded-[32px] p-6 shadow-[0_25px_60px_-15px_rgba(74,13,51,0.15)] relative z-10">
             
             {/* Mock Header */}
@@ -147,12 +147,12 @@ const Welcome = () => {
               </span>
             </div>
 
-            {/* Mock Post Content */}
+           
             <p className="text-sm text-gray-700 leading-relaxed mb-4">
               Welcome to <span className="font-bold text-[#851D52]">Bayan</span>! 🚀 Experience a clean, fast, and thoughtful platform built for real conversations. What's on your mind today?
             </p>
 
-            {/* Mock Media Placeholder */}
+            
             <div className="w-full h-44 rounded-2xl bg-gradient-to-br from-[#4a0d33] via-[#851D52] to-[#e87163] flex items-center justify-center relative overflow-hidden group shadow-inner mb-4">
               <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
               <div className="relative text-center text-white p-4">
@@ -161,7 +161,7 @@ const Welcome = () => {
               </div>
             </div>
 
-            {/* Mock Post Actions */}
+         
             <div className="flex items-center justify-between text-gray-500 pt-1 border-t border-gray-100 text-xs font-medium">
               <div className="flex items-center gap-1.5 text-[#851D52] font-semibold">
                 <Heart size={16} className="fill-[#851D52]" /> 128
@@ -175,7 +175,7 @@ const Welcome = () => {
             </div>
           </div>
 
-          {/* Floating Micro Card 1 */}
+         
           <motion.div 
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -190,7 +190,7 @@ const Welcome = () => {
             </div>
           </motion.div>
 
-          {/* Floating Micro Card 2 */}
+         
           <motion.div 
             animate={{ y: [0, 8, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
@@ -208,7 +208,7 @@ const Welcome = () => {
 
       </main>
 
-      {/* Feature Grid Section */}
+      
       <section className="w-full max-w-6xl mx-auto px-6 pb-16 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
@@ -245,7 +245,7 @@ const Welcome = () => {
         </div>
       </section>
 
-      {/* Simple Clean Footer */}
+     
       <footer className="w-full border-t border-gray-200/60 py-6 text-center text-xs text-gray-400 relative z-10">
         <p>© {new Date().getFullYear()} Bayan. Built with passion for seamless communication.</p>
       </footer>

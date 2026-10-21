@@ -370,7 +370,7 @@ const Post = () => {
                     key={postId}
                     className="bg-white p-4 sm:p-5 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative overflow-hidden"
                   >
-                    {/* Post Header */}
+                    
                     <div className="flex justify-between items-start mb-3">
                       <Link 
                         to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
@@ -437,7 +437,7 @@ const Post = () => {
                       )}
                     </div>
 
-                    {/* Post Body */}
+               
                     <div 
                       onClick={() => navigate(`/post/${postId}`)}
                       className="cursor-pointer"
@@ -449,7 +449,7 @@ const Post = () => {
                         {singlePost.description}
                       </p>
 
-                      {/* Image Container */}
+                      
                       {postImage && (
                         <div className="w-full rounded-[16px] overflow-hidden border border-gray-100 bg-gray-950/5 shadow-sm my-3 flex items-center justify-center max-h-[450px]">
                           <img 
@@ -462,7 +462,7 @@ const Post = () => {
                       )}
                     </div>
 
-                    {/* Action Buttons Bar */}
+                    
                     <div className="pt-2.5 mt-1 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
                       <button
                         onClick={() => handleLike(postId)}
@@ -507,7 +507,7 @@ const Post = () => {
             ) : null}   
 
 
-            {/* SCROLL TARGET LOADER */}
+            
             <div ref={observerTarget} className="py-8 flex justify-center items-center w-full min-h-[80px]">
               {isFetchingMore ? (
                 <div className="flex items-center justify-center p-3">
@@ -524,7 +524,7 @@ const Post = () => {
         )}
       </main>
 
-      {/* Reusable Comment Modal */}
+     
       <CommentModal
         selectedPost={selectedPostModal}
         onClose={() => setSelectedPostModal(null)}
@@ -534,7 +534,7 @@ const Post = () => {
         onPostUpdated={() => fetchPosts(1, true)}
       />
 
-      {/* Reusable Edit Post Modal */}
+      
       <EditPostModal
         isOpen={Boolean(editTarget)}
         onClose={closeEditModal}
@@ -546,7 +546,7 @@ const Post = () => {
         saving={saving}
       />
 
-      {/* Reusable Delete Post Modal */}
+      
       <DeletePostModal
         isOpen={Boolean(deleteTarget)}
         onClose={closeDeleteModal}

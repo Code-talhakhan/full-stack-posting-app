@@ -6,7 +6,7 @@ import { uploadOnCloudinary } from "../../libs/cloudinary.mjs"
 
 const router = express.Router()
 
-// Helper Function: Real-time Notification Emit karne ke liye
+
 const emitRealtimeNotification = async (req, notification) => {
     try {
         if (!req.io || !global.onlineUsers) return;
@@ -24,7 +24,7 @@ const emitRealtimeNotification = async (req, notification) => {
     }
 };
 
-// 1. CREATE POST
+// CREATE POST
 router.post("/post", multerMiddleware.any(), async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -59,7 +59,7 @@ router.post("/post", multerMiddleware.any(), async (req, res) => {
     }
 })
 
-// 2. GET ALL POSTS (WITH PAGINATION)
+// GET ALL POSTS (WITH PAGINATION)
 router.get("/post", async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1
@@ -93,7 +93,7 @@ router.get("/post", async (req, res) => {
     }
 })
 
-// 3. GET SINGLE POST BY ID
+// GET SINGLE POST BY ID
 router.get("/post/:postId", async (req, res) => {
     try {
         const { postId } = req.params
@@ -120,7 +120,7 @@ router.get("/post/:postId", async (req, res) => {
     }
 })
 
-// 4. EDIT / UPDATE POST
+// EDIT / UPDATE POST
 router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -166,7 +166,7 @@ router.put("/post/:postId", multerMiddleware.any(), async (req, res) => {
     }
 });
 
-// 5. DELETE POST
+// DELETE POST
 router.delete("/post/:postId", async (req, res) => {
     try {
         if (!req.currentUser) {
@@ -197,7 +197,7 @@ router.delete("/post/:postId", async (req, res) => {
     }
 });
 
-// 6. LIKE / UNLIKE POST WITH REALTIME EMIT & DEBUG LOGS
+//LIKE / UNLIKE POST 
 router.post("/post/:postId/like", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -252,7 +252,7 @@ router.post("/post/:postId/like", async (req, res) => {
     }
 })
 
-// 7. ADD COMMENT TO POST WITH REALTIME EMIT
+//  ADD COMMENT TO POST 
 router.post("/post/:postId/comment", async (req, res) => {
     try {
         if (!req.currentUser) return res.status(401).send({ message: "unauthorized" })
@@ -300,7 +300,7 @@ router.post("/post/:postId/comment", async (req, res) => {
     }
 })
 
-// 8. LIKE / UNLIKE COMMENT WITH REALTIME EMIT
+// LIKE / UNLIKE COMMENT WITH REALTIME EMIT
 router.post("/post/:postId/comment/:commentId/like", async (req, res) => {
     try {
         if (!req.currentUser) {

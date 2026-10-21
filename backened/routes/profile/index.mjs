@@ -50,7 +50,7 @@ router.get("/user/:userId", async (req, res, next) => {
             });
         }
 
-        // Is specific user ki posts count karein
+     
         const postCount = await PostModel.countDocuments({ authorId: userId });
 
         const userData = user._doc ? user._doc : user.toObject();
@@ -72,7 +72,7 @@ router.get("/user/:userId", async (req, res, next) => {
 })
 
 
-// update profile (Includes firstname, lastname, and bio)
+// update profile 
 router.put("/profile", async (req, res, next) => {
     try {
         if (!req.currentUser) {
@@ -183,7 +183,6 @@ router.put("/profile-picture", multerMiddleware.any(), async (req, res, next) =>
         }
 
         // upload file on cloudinary
-        // save cloudinary url to database
         const fileResp = await uploadOnCloudinary(file)
 
         await UserModel.findByIdAndUpdate({ _id: req.currentUser._id }, {

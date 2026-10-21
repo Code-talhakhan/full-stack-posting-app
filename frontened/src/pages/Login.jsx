@@ -103,7 +103,6 @@ const Login = () => {
       
       const errorMsg = error?.response?.data?.message?.toLowerCase() || ""
 
-      // Check if Email is unverified (OTP Flow Integration)
       if (errorMsg.includes("not verified") || errorMsg.includes("verify your email") || errorMsg.includes("unverified")) {
         try {
           showToast.info("Email is not verified. Resending OTP...")
@@ -137,17 +136,20 @@ const Login = () => {
       animate={{ opacity: 1, x: 0 }} 
       exit={{ opacity: 0, x: -50 }} 
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="min-h-screen w-full relative flex items-center justify-center p-0 sm:p-4 md:p-6 font-sans bg-white sm:bg-gradient-to-br sm:from-[#4a0d33] sm:via-[#851D52] sm:to-[#e87163] overflow-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="min-h-screen w-full relative flex items-center justify-center p-0 sm:p-4 md:p-6 font-sans bg-gradient-to-br from-[#fffdfd] via-[#fdfafb] to-[#f7f0f4] sm:bg-gradient-to-br sm:from-[#4a0d33] sm:via-[#851D52] sm:to-[#e87163] overflow-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
     >
-      {/* Background Glows (PC Only) */}
+      {/* MOBILE GLOW ELEMENTS (Welcome & Signup Page Style) */}
+      <div className="block sm:hidden absolute top-[-10%] left-[-15%] w-[320px] h-[320px] rounded-full bg-gradient-to-br from-[#851D52]/15 to-[#e87163]/10 blur-[90px] pointer-events-none" />
+      <div className="block sm:hidden absolute bottom-[-10%] right-[-15%] w-[350px] h-[350px] rounded-full bg-gradient-to-tl from-[#4a0d33]/15 to-[#851D52]/10 blur-[100px] pointer-events-none" />
+
+      {/* DESKTOP BACKGROUND GLOWS */}
       <div className="hidden sm:block absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-white/5 blur-3xl pointer-events-none"></div>
       <div className="hidden sm:block absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-black/10 blur-3xl pointer-events-none"></div>
 
-      {/* Main Container */}
-      <div className="relative z-10 w-full min-h-screen sm:min-h-0 max-w-4xl bg-white sm:rounded-[2rem] sm:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-none md:max-h-[90vh] overflow-y-auto md:overflow-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative z-10 w-full min-h-screen sm:min-h-0 max-w-4xl bg-transparent sm:bg-white sm:rounded-[2rem] sm:shadow-[0_20px_50px_rgba(0,0,0,0.3)] flex flex-col md:flex-row max-h-none md:max-h-[90vh] overflow-y-auto md:overflow-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         
-        {/* LEFT PANEL: Form Section */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-white min-h-screen sm:min-h-0 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {/* Form Container */}
+        <div className="w-full md:w-1/2 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-transparent sm:bg-white min-h-screen sm:min-h-0 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           <div className="text-left sm:text-center mb-6">
             <h2 className="text-3xl sm:text-2xl md:text-3xl font-extrabold sm:font-bold text-[#5E1243]">
               Welcome Back
@@ -174,7 +176,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => set_password(e.target.value)}
               />
-              {/* FORGOT PASSWORD LINK */}
+            
               <div className="text-right">
                 <Link 
                   to="/forgot-password" 
@@ -203,7 +205,7 @@ const Login = () => {
           </p>
         </div>
 
-        {/* RIGHT PANEL: PC Illustration (PC Only) */}
+        {/* Right Desktop Brand Illustration Panel */}
         <div className="hidden md:flex w-1/2 bg-[#fdfafb] p-8 flex-col items-center justify-center border-l border-gray-100">
           <div className="w-full max-w-[450px] mb-6 flex items-center justify-center">
             <img 

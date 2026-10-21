@@ -28,16 +28,16 @@ const Header = ({ hideSearch = false }) => {
     email: "user@gmail.com" 
   })
 
-  // URL check: Single Post route par search bar hide karne ke liye
+  
   const isSinglePostRoute = location.pathname.startsWith('/post/')
   const shouldShowSearch = !hideSearch && !isSinglePostRoute
 
-  // Sync search input with URL
+ 
   useEffect(() => {
     setSearchQuery(searchParams.get('q') || '')
   }, [searchParams])
 
-  // DEBOUNCE SEARCH LOGIC (500ms)
+  
   useEffect(() => {
     if (!shouldShowSearch) return
 
@@ -52,7 +52,7 @@ const Header = ({ hideSearch = false }) => {
           navigate('/')
         }
       }
-    }, 500)
+    }, 700)
 
     return () => clearTimeout(timer)
   }, [searchQuery, navigate, searchParams, shouldShowSearch])
@@ -111,7 +111,7 @@ const Header = ({ hideSearch = false }) => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-3">
           
-          {/* Logo & Desktop Navigation (Left Side) */}
+         
           <div className="flex items-center gap-3 sm:gap-6">
             <Link 
               to="/" 
@@ -131,7 +131,7 @@ const Header = ({ hideSearch = false }) => {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
+            
             <nav className="hidden md:flex items-center gap-1 bg-[#fdfafb]/50 p-1.5 rounded-2xl border border-gray-100">
               <Link to="/" className="outline-none" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <motion.div 
@@ -157,7 +157,7 @@ const Header = ({ hideSearch = false }) => {
             </nav>
           </div>
 
-          {/* DEBOUNCE SEARCH BAR */}
+          
           {shouldShowSearch ? (
             <div className="flex-1 max-w-xs sm:max-w-md mx-1 sm:mx-2 relative">
               <input
@@ -183,13 +183,13 @@ const Header = ({ hideSearch = false }) => {
             <div className="flex-1"></div>
           )}
 
-          {/* Right Action Icons (Notification Bell + Profile) */}
+          
           <div className="flex items-center gap-2 sm:gap-3 relative flex-shrink-0">
             
-            {/* NOTIFICATION BELL INTEGRATED */}
+            
             <NotificationBell />
 
-            {/* Profile Avatar Button */}
+           
             <button 
               onClick={() => {
                 setIsDropdownOpen(!isDropdownOpen)
@@ -205,7 +205,7 @@ const Header = ({ hideSearch = false }) => {
               />
             </button>
 
-            {/* Mobile Hamburger Button */}
+            
             <button 
               onClick={() => {
                 setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -274,7 +274,7 @@ const Header = ({ hideSearch = false }) => {
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+       
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div

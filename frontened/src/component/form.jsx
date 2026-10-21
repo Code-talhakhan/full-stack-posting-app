@@ -163,7 +163,7 @@ export default function Form({ getAllPosts }) {
             )}
           </div>
 
-          {/* Submit Button */}
+             {/* submit button  */}
           <div className="pt-2 flex justify-end">
             <button
               disabled={submitting}

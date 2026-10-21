@@ -9,21 +9,21 @@ const SplashScreen = () => {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.6, ease: "easeInOut" } }}
     >
-      {/* Background Decorative Glow Elements */}
+    
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-gradient-to-br from-[#851D52]/15 to-[#e87163]/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-[#4a0d33]/15 to-[#851D52]/10 blur-[140px] pointer-events-none" />
 
-      {/* Top Spacer for Center Alignment */}
+   
       <div className="w-full"></div>
 
-      {/* Center Branding Container */}
+
       <motion.div
         initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="flex items-center gap-2 sm:gap-3 relative z-10 overflow-visible py-2"
       >
-        {/* Animated Logo Mark Image */}
+  
         <motion.img 
           src={logo} 
           alt="Bayan Logo" 
@@ -32,7 +32,7 @@ const SplashScreen = () => {
           className="w-14 h-14 sm:w-18 sm:h-18 object-contain flex-shrink-0 drop-shadow-[0_10px_20px_rgba(133,29,82,0.3)]"
         />
 
-        {/* Clean Vector Brand Text */}
+    
         <span 
           className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-[#4a0d33] to-[#851D52] text-transparent bg-clip-text tracking-tight select-none leading-normal py-1"
           style={{ fontFamily: "'Poppins', 'Outfit', system-ui, sans-serif" }}
@@ -41,7 +41,7 @@ const SplashScreen = () => {
         </span>
       </motion.div>
 
-      {/* Bottom Footer Branding (Instagram / Meta Style) */}
+      
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}

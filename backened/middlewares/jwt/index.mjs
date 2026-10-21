@@ -6,11 +6,11 @@ export const authGuardJWT = async (req, res, next) => {
 
  
  const authHeader = req.headers.authorization;
-//  console.log("authHeader ==>", authHeader);
+
 
 
  const token = authHeader && authHeader.split(" ")[1];
-//  console.log("token ==>", token);
+
 
  if (!token) {
   return res.status(401).json({ message: "unauthorized!" });
@@ -19,7 +19,7 @@ export const authGuardJWT = async (req, res, next) => {
  try {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY)
     const currentUser = await UserModel.findOne({_id: decodedToken._id})
-    // console.log("currentuser=>", currentUser)
+    
 
     req.currentUser = currentUser
     next()

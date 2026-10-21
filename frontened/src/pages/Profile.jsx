@@ -140,7 +140,7 @@ const Profile = () => {
     ? new Date(displayData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) 
     : "Recently"
 
-  // Helper function to render bio with Link2 Icon for URLs
+ 
   const renderBioWithLinks = (bioText) => {
     if (!bioText) return null;
     const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/g;
@@ -421,13 +421,13 @@ const Profile = () => {
           </h2>
         </div>
 
-        {/* Profile Header Card */}
+      
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 p-6 sm:p-8 flex flex-col gap-6 mb-6"
         >
-          {/* Top Section: Avatar & User Info */}
+         
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8">
             <div className="relative w-32 h-32 flex-shrink-0">
               <img
@@ -463,10 +463,10 @@ const Profile = () => {
                 {defaultFirstName} {defaultLastName}
               </h3>
 
-              {/* Subtle Gray Email */}
+           
               <p className="text-gray-500 font-medium text-xs sm:text-sm mb-2">{defaultEmail}</p>
 
-              {/* INSTA-STYLE BIO WITH LINK ICON */}
+              
               {defaultBio && (
                 <div className="my-1.5 max-w-md w-full text-center sm:text-left">
                   <p className="text-sm font-normal text-gray-700 leading-relaxed tracking-normal">
@@ -481,7 +481,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Bottom Section: INSTAGRAM-STYLE FULL WIDTH BUTTONS ROW */}
+          
           {isOwnProfile && (
             <div className="flex items-center gap-3 w-full pt-2">
               <button
@@ -500,7 +500,7 @@ const Profile = () => {
           )}
         </motion.div>
 
-        {/* Stats Section */}
+        
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -539,7 +539,7 @@ const Profile = () => {
           </h3>
         </div>
 
-        {/* User Posts List */}
+       
         {loadingPosts ? (
           <div className="space-y-5">
             {[1, 2].map((i) => (
@@ -570,7 +570,7 @@ const Profile = () => {
                       key={postId}
                       className="bg-white p-5 sm:p-6 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-[#851D52]/20 transition-all duration-300 relative"
                     >
-                      {/* Card Header */}
+                   
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-3">
                           <img 
@@ -636,12 +636,12 @@ const Profile = () => {
                         )}
                       </div>
 
-                      {/* Clickable Content Wrapper */}
+                     
                       <div 
                         onClick={() => navigate(`/post/${postId}`)}
                         className="cursor-pointer group"
                       >
-                        {/* Content Section */}
+                        
                         <div className="mb-3">
                           <h4 className="font-bold text-gray-900 text-[17px] mb-1 group-hover:text-[#851D52] transition-colors">
                             {singlePost.title}
@@ -651,7 +651,7 @@ const Profile = () => {
                           </p>
                         </div>
 
-                        {/* Image Frame */}
+                       
                         {postImage && (
                           <div className="w-full rounded-[18px] overflow-hidden border border-gray-100 bg-black/5 my-3">
                             <img 
@@ -664,7 +664,7 @@ const Profile = () => {
                         )}
                       </div>
 
-                      {/* Action Bar */}
+                     
                       <div className="pt-3 border-t border-gray-100 flex items-center justify-start gap-4 text-gray-700 text-sm font-medium">
                         <button
                           onClick={() => handleLike(postId)}

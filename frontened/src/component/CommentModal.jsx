@@ -16,7 +16,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
   const [commentsList, setCommentsList] = useState([])
   const [isMobile, setIsMobile] = useState(false)
 
-  // Track viewport width for responsive behavior
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768)
@@ -26,7 +26,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  // Re-sync local comments list when selectedPost changes
+  
   useEffect(() => {
     if (selectedPost) {
       setCommentsList(selectedPost?.comments || [])
@@ -45,14 +45,14 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                  || (typeof selectedPost?.files === 'string' ? selectedPost?.files : selectedPost?.files?.[0]) 
                  || null;
 
-  // Optimistic Add Comment
+  
   const handleAddComment = async () => {
     if (!modalCommentText.trim() || submittingComment) return
 
     const commentContent = modalCommentText.trim()
-    setModalCommentText("") // Reset input field instantly
+    setModalCommentText("") 
 
-    // Temporary Optimistic Comment
+    
     const tempComment = {
       _id: Date.now().toString(),
       text: commentContent,
@@ -89,14 +89,13 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
     } catch (error) {
       console.error("Error adding comment:", error)
       showToast.error(error?.response?.data?.message || "Failed to add comment")
-      setCommentsList(previousComments) // Rollback on error
+      setCommentsList(previousComments) 
       setModalCommentText(commentContent)
     } finally {
       setSubmittingComment(false)
     }
   }
 
-  // Optimistic Toggle Comment Like
   const handleToggleCommentLike = async (commentId) => {
     if (!currentUserId) {
       showToast.error("Please login first")
@@ -105,7 +104,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
 
     const previousComments = [...commentsList]
 
-    // Optimistic Update
+
     setCommentsList(prevComments =>
       prevComments.map(comment => {
         if (comment._id === commentId) {
@@ -137,7 +136,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
     } catch (error) {
       console.error("Error liking comment:", error)
       showToast.error("Failed to toggle comment like")
-      setCommentsList(previousComments) // Rollback on failure
+      setCommentsList(previousComments) 
     }
   }
 
@@ -166,10 +165,9 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-4xl h-[88vh] sm:h-[82vh] bg-white rounded-t-[28px] sm:rounded-[28px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100 relative md:touch-auto touch-pan-y"
         >
-          {/* LEFT SIDE: Burgundy Gradient Panel (Desktop Only) */}
           <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-[#4a0d33] via-[#5E1243] to-[#851D52] p-6 flex-col justify-between overflow-hidden text-white h-full">
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              {/* Author Info - Frameless Profile Picture */}
+
               <Link 
                 to={postAuthor?._id ? `/profile/${postAuthor._id}` : "/profile"} 
                 onClick={onClose}
@@ -186,7 +184,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                 </div>
               </Link>
 
-              {/* Title & Description */}
               <div className="flex-shrink-0 mb-2">
                 {selectedPost?.title && (
                   <h2 className="text-lg font-bold text-white leading-snug tracking-tight line-clamp-2">{selectedPost.title}</h2>
@@ -196,7 +193,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
                 </p>
               </div>
 
-              {/* Image Frame Container */}
               {postImage && (
                 <div className="flex-1 w-full rounded-2xl overflow-hidden border border-white/15 bg-black/20 shadow-inner flex items-center justify-center my-2 min-h-0">
                   <img 
@@ -208,7 +204,6 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               )}
             </div>
 
-            {/* Bottom Fixed Stats */}
             <div className="pt-3 border-t border-white/15 mt-2 flex items-center gap-3 text-white text-xs font-medium flex-shrink-0">
               <div className="flex items-center gap-1.5 bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-sm">
                 <Heart className={`w-3.5 h-3.5 ${likedPosts?.[postId] ? 'fill-rose-400 text-rose-400' : 'text-white'}`} />
@@ -221,30 +216,28 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
             </div>
           </div>
 
-          {/* RIGHT SIDE: Comments Panel */}
+          
           <div className="w-full md:w-1/2 bg-[#F4F7FB] flex flex-col justify-between h-full min-h-0 relative">
             
-            {/* Header Section with Drag Pill and Perfectly Spaced Title */}
+           
             <div className="bg-white border-b border-gray-100 flex flex-col justify-center relative shadow-sm flex-shrink-0 md:cursor-default cursor-grab active:cursor-grabbing">
               
-              {/* Mobile Drag Handle Pill Indicator */}
+             
               <div className="md:hidden w-full flex justify-center pt-2.5 pb-1">
                 <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
               </div>
 
               <div className="px-4 sm:px-6 pt-1.5 pb-3 sm:py-3.5 flex items-center justify-between relative min-h-[44px]">
-                {/* Left Placeholder */}
+                
                 <div className="w-8 md:w-auto">
                   <span className="hidden md:inline-block text-xs text-gray-400 font-medium">{commentsList.length} total</span>
                 </div>
 
-                {/* Centered Heading */}
                 <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
                   <h3 className="font-bold text-[#5E1243] text-base text-center tracking-tight">Comments</h3>
                   <span className="md:hidden text-xs text-gray-400 font-medium">({commentsList.length})</span>
                 </div>
 
-                {/* Close Button: Hidden on mobile (< 768px), Visible on Desktop */}
                 <button
                   onClick={onClose}
                   className="hidden md:flex p-2 rounded-full text-gray-500 bg-gray-100 hover:text-gray-800 hover:bg-gray-200 transition-all cursor-pointer shadow-sm z-10"
@@ -254,7 +247,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               </div>
             </div>
 
-            {/* Comments List */}
+             {/* Comments List  */}
             <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-3.5">
               {commentsList.length > 0 ? (
                 commentsList.map((comment, idx) => {
@@ -313,7 +306,7 @@ const CommentModal = ({ selectedPost, onClose, currentUserId, onPostUpdated, lik
               )}
             </div>
 
-            {/* Comment Input */}
+             {/* Comment Input  */}
             <div className="p-3.5 sm:p-4 border-t border-gray-200 bg-white flex items-center gap-2.5 flex-shrink-0">
               <input
                 type="text"

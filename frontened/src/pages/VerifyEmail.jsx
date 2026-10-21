@@ -19,7 +19,7 @@ const VerifyEmail = () => {
   const location = useLocation()
   const { user } = store ? store() : { user: null }
 
-  // Fallback: Pehle route state se email lo, warna logged-in user state se
+  
   const targetEmail = location?.state?.email || user?.email || ""
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const VerifyEmail = () => {
     try {
       setLoading(true)
       
-      // Backend Endpoint: /api/v1/verify-otp
+     
       await axios.post(`${baseUrl}/api/v1/verify-otp`, {
         otp: otpCode,
         email: targetEmail.toLowerCase(),
@@ -120,7 +120,7 @@ const VerifyEmail = () => {
       setCanResend(false)
       setTimer(60)
 
-      // Backend Endpoint: /api/v1/send-otp
+     
       await axios.post(`${baseUrl}/api/v1/send-otp`, { 
         email: targetEmail.toLowerCase() 
       })
