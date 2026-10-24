@@ -138,10 +138,10 @@ const Signup = () => {
           </div>
 
           <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            Join the Elite Community
+            Eik Naya Bayan Do
           </h3>
           <p className="text-sm text-gray-500 text-center max-w-xs leading-relaxed">
-            Unlock exclusive access to a premium posting platform and network.
+            Share u khayalat, join de discussion, and connect with friends today.
           </p>
           
           <div className="flex gap-2 mt-8">

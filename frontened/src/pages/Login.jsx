@@ -216,10 +216,10 @@ const Login = () => {
           </div>
 
           <h3 className="text-2xl font-bold text-gray-800 mb-2 text-center">
-            Stay Connected
+            Doston Se Jude Rahein
           </h3>
           <p className="text-sm text-gray-500 text-center max-w-xs leading-relaxed">
-            Log back in to check your posts, chat with friends, and share updates.
+            Apne posts check karein, doston se chat karein, aur naye updates share karein.
           </p>
           
           <div className="flex gap-2 mt-8">
@@ -233,4 +233,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default Login 
